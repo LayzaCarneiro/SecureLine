@@ -58,6 +58,12 @@ const MembersLayout = ({
       icon: GraduationCap,
     },
 
+    {
+      to: "/members/colaboradores",
+      label: "Colaboradores",
+      icon: Users,
+    },
+
     ...(isAdmin
       ? [
           {
