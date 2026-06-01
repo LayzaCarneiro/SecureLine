@@ -112,43 +112,118 @@ const Auth = () => {
 
     const normalizedCode = parsed.data.accessCode.trim();
 
-    const role =
-      normalizedCode === ADMIN_CODE
-        ? "admin"
-        : normalizedCode === MEMBER_CODE
-        ? "subscriber"
-        : null;
-
     setLoading(true);
 
-    if (!role) {
-      setLoading(false);
-
-      toast({
-        title: "Código inválido",
-        description:
-          "O código de acesso informado é inválido.",
-        variant: "destructive",
-      });
-
-      return;
-    }
-
-    const { error } =
-      await supabase.auth.signUp({
+    // Admin code bypassa a API e cria conta admin diretamente no Supabase
+    if (normalizedCode === ADMIN_CODE) {
+      const { error } = await supabase.auth.signUp({
         email: parsed.data.email,
-
         password: parsed.data.password,
-
         options: {
           emailRedirectTo: `${window.location.origin}/members`,
-
           data: {
             full_name: parsed.data.fullName,
-            role,
+            role: "admin",
           },
         },
       });
+
+      setLoading(false);
+
+      if (error) {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Conta criada!",
+        description: "Acesso administrativo liberado.",
+      });
+      navigate("/members");
+      return;
+    }
+
+    // Fluxo padrão: valida código de colaborador via API
+    let colaborador: any = null;
+    try {
+      const res = await fetch(COLABORADORES_API);
+      if (!res.ok) throw new Error("API indisponível");
+      const lista = await res.json();
+      colaborador = lista.find(
+        (c: any) =>
+          (c.codigo_colaborador || "").trim().toUpperCase() ===
+          normalizedCode.toUpperCase()
+      );
+    } catch (err) {
+      setLoading(false);
+      toast({
+        title: "Falha de conexão",
+        description: "Não foi possível validar seu código. Tente novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!colaborador) {
+      setLoading(false);
+      toast({
+        title: "Código inválido",
+        description: "O código de acesso informado não foi encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (colaborador.senha) {
+      setLoading(false);
+      toast({
+        title: "Cadastro já realizado",
+        description:
+          "Este código já possui uma senha definida. Faça login na aba Entrar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Atualiza colaborador na API com nome + senha
+    try {
+      const putRes = await fetch(`${COLABORADORES_API}/${colaborador.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...colaborador,
+          nome: parsed.data.fullName,
+          senha: parsed.data.password,
+        }),
+      });
+      if (!putRes.ok) throw new Error(await putRes.text());
+    } catch (err: any) {
+      setLoading(false);
+      toast({
+        title: "Erro ao definir senha",
+        description: err?.message || "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Cria conta no Supabase para acessar a área de membros
+    const { error } = await supabase.auth.signUp({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/members`,
+        data: {
+          full_name: parsed.data.fullName,
+          role: "subscriber",
+          codigo_colaborador: colaborador.codigo_colaborador,
+        },
+      },
+    });
 
     setLoading(false);
 
@@ -158,16 +233,12 @@ const Auth = () => {
         description: error.message,
         variant: "destructive",
       });
-
       return;
     }
 
     toast({
       title: "Conta criada!",
-      description:
-        role === "admin"
-          ? "Acesso administrativo liberado."
-          : "Seu acesso foi liberado com sucesso.",
+      description: "Senha definida e acesso liberado com sucesso.",
     });
 
     navigate("/members");
