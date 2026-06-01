@@ -58,6 +58,12 @@ const MembersLayout = ({
       icon: GraduationCap,
     },
 
+    {
+      to: "/members/colaboradores",
+      label: "Colaboradores",
+      icon: Users,
+    },
+
     ...(isAdmin
       ? [
           {
@@ -160,8 +166,11 @@ const MembersLayout = ({
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-white">
-                {user?.email}
+                {user?.nome || user?.codigo_colaborador}
               </p>
+              {user?.empresa?.nome && (
+                <p className="text-xs text-zinc-500">{user.empresa.nome}</p>
+              )}
             </div>
 
             <Button
