@@ -31,8 +31,14 @@ import {
   LockKeyhole,
 } from "lucide-react";
 
+import {
+  findColaboradorByCodigo,
+  updateColaborador,
+  hasPasswordSet,
+  isActive,
+} from "@/services/colaboradores";
+
 const ADMIN_CODE = "AdminSecureL1n&";
-const COLABORADORES_API = "https://api-golpe-whatsapp.onrender.com/colaboradores";
 
 const signUpSchema = z.object({
   fullName: z
@@ -150,19 +156,19 @@ const Auth = () => {
     // Fluxo padrão: valida código de colaborador via API
     let colaborador: any = null;
     try {
-      const res = await fetch(COLABORADORES_API);
-      if (!res.ok) throw new Error("API indisponível");
-      const lista = await res.json();
-      colaborador = lista.find(
-        (c: any) =>
-          (c.codigo_colaborador || "").trim().toUpperCase() ===
-          normalizedCode.toUpperCase()
-      );
-    } catch (err) {
+      console.log("🔍 Buscando código:", normalizedCode);
+      colaborador = await findColaboradorByCodigo(normalizedCode);
+    } catch (err: any) {
       setLoading(false);
+      const errorMsg = err?.message || "Erro desconhecido";
+      
+      console.error("❌ Erro ao buscar código:", errorMsg);
+      
       toast({
-        title: "Falha de conexão",
-        description: "Não foi possível validar seu código. Tente novamente.",
+        title: "❌ Não foi possível verificar o código",
+        description: errorMsg.includes('conectar') 
+          ? "Verifique sua conexão de internet ou tente novamente."
+          : "Não conseguimos validar seu código. Tente novamente.",
         variant: "destructive",
       });
       return;
@@ -171,17 +177,17 @@ const Auth = () => {
     if (!colaborador) {
       setLoading(false);
       toast({
-        title: "Código inválido",
-        description: "O código de acesso informado não foi encontrado.",
+        title: "❌ Código não encontrado",
+        description: "O código de acesso informado não foi encontrado no sistema.",
         variant: "destructive",
       });
       return;
     }
 
-    if (colaborador.senha) {
+    if (hasPasswordSet(colaborador)) {
       setLoading(false);
       toast({
-        title: "Cadastro já realizado",
+        title: "⚠️ Cadastro já realizado",
         description:
           "Este código já possui uma senha definida. Faça login na aba Entrar.",
         variant: "destructive",
@@ -191,16 +197,11 @@ const Auth = () => {
 
     // Atualiza colaborador na API com nome + senha
     try {
-      const putRes = await fetch(`${COLABORADORES_API}/${colaborador.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...colaborador,
-          nome: parsed.data.fullName,
-          senha: parsed.data.password,
-        }),
-      });
-      if (!putRes.ok) throw new Error(await putRes.text());
+      await updateColaborador(
+        colaborador.id,
+        parsed.data.fullName,
+        parsed.data.password
+      );
     } catch (err: any) {
       setLoading(false);
       toast({
