@@ -31,8 +31,8 @@ import {
   LockKeyhole,
 } from "lucide-react";
 
-const MEMBER_CODE = "SecureL1n&";
 const ADMIN_CODE = "AdminSecureL1n&";
+const COLABORADORES_API = "https://api-golpe-whatsapp.onrender.com/colaboradores";
 
 const signUpSchema = z.object({
   fullName: z
