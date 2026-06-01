@@ -13,7 +13,6 @@ import MembersDashboard from "@/pages/members/MembersDashboard.tsx";
 import TrainingsList from "@/pages/members/TrainingsList.tsx";
 import TrainingPlayer from "@/pages/members/TrainingPlayer.tsx";
 import AdminPanel from "@/pages/members/AdminPanel.tsx";
-import ColaboradoresList from "@/pages/members/ColaboradoresList.tsx";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +30,6 @@ const App = () => (
               <Route path="/members" element={<ProtectedRoute><MembersDashboard /></ProtectedRoute>} />
               <Route path="/members/trainings" element={<ProtectedRoute><TrainingsList /></ProtectedRoute>} />
               <Route path="/members/trainings/:id" element={<ProtectedRoute><TrainingPlayer /></ProtectedRoute>} />
-              <Route path="/members/colaboradores" element={<ProtectedRoute><ColaboradoresList /></ProtectedRoute>} />
               <Route path="/members/admin" element={<ProtectedRoute requireAdmin><AdminPanel /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -175,7 +175,9 @@ const MembersDashboard = () => {
                     bg-clip-text
                   "
                 >
-                  {user?.nome || user?.codigo_colaborador || "usuário"}
+                  {user?.user_metadata
+                    ?.full_name ||
+                    "usuário"}
                 </span>
               </h1>
 

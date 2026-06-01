@@ -81,8 +81,19 @@ const TrainingPlayer = () => {
     const percentage = total > 0 ? (score / total) * 100 : 0;
 
     if (user && !saved) {
-      // Persistência via API externa ainda não implementada.
-      setSaved(true);
+      const { error } = await supabase.from("training_attempts").insert({
+        user_id: user.id,
+        training_id: training.id,
+        score,
+        total,
+        percentage,
+        answers: newAnswers,
+      });
+      if (error) {
+        toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      } else {
+        setSaved(true);
+      }
     }
     setDone(true);
   };

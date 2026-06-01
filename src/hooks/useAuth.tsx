@@ -7,89 +7,156 @@ import {
 } from "react";
 
 import {
-  Colaborador,
-  loginColaborador,
-  signupColaborador,
-  SignupPayload,
-} from "@/services/colaboradores";
+  Session,
+  User,
+} from "@supabase/supabase-js";
 
-const STORAGE_KEY = "secureline.colaborador";
+import { supabase } from "@/integrations/supabase/client";
+
+export type AppRole =
+  | "admin"
+  | "subscriber";
 
 interface AuthContextValue {
-  user: Colaborador | null;
+  session: Session | null;
+
+  user: User | null;
+
+  roles: AppRole[];
+
   loading: boolean;
+
   isAdmin: boolean;
+
   isSubscriber: boolean;
-  signIn: (codigo: string, senha: string) => Promise<Colaborador>;
-  signUp: (payload: SignupPayload) => Promise<Colaborador>;
+
   signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const AuthContext =
+  createContext<
+    AuthContextValue | undefined
+  >(undefined);
 
-const isAdminColaborador = (c: Colaborador | null) => {
-  if (!c) return false;
-  const code = c.codigo_colaborador?.toUpperCase() ?? "";
-  return code.includes("ADMIN");
-};
+export const AuthProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+  const [session, setSession] =
+    useState<Session | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<Colaborador | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [roles, setRoles] =
+    useState<AppRole[]>([]);
+
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      // ignore
-    }
-    setLoading(false);
+    const {
+      data: sub,
+    } = supabase.auth.onAuthStateChange(
+      (_event, sess) => {
+        setSession(sess);
+
+        setUser(sess?.user ?? null);
+
+        const role =
+          sess?.user?.user_metadata
+            ?.role as AppRole;
+
+        setRoles(role ? [role] : []);
+
+        setLoading(false);
+      }
+    );
+
+    supabase.auth
+      .getSession()
+      .then(
+        ({
+          data: { session: sess },
+        }) => {
+          setSession(sess);
+
+          setUser(
+            sess?.user ?? null
+          );
+
+          const role =
+            sess?.user?.user_metadata
+              ?.role as AppRole;
+
+          setRoles(
+            role ? [role] : []
+          );
+
+          setLoading(false);
+        }
+      );
+
+    return () =>
+      sub.subscription.unsubscribe();
   }, []);
 
-  const persist = (c: Colaborador | null) => {
-    setUser(c);
-    if (c) localStorage.setItem(STORAGE_KEY, JSON.stringify(c));
-    else localStorage.removeItem(STORAGE_KEY);
-  };
-
-  const signIn = async (codigo: string, senha: string) => {
-    const c = await loginColaborador(codigo, senha);
-    persist(c);
-    return c;
-  };
-
-  const signUp = async (payload: SignupPayload) => {
-    const c = await signupColaborador(payload);
-    // try login afterwards to fetch full record (with empresa/telefones)
-    try {
-      const full = await loginColaborador(payload.codigo_colaborador, payload.senha);
-      persist(full);
-      return full;
-    } catch {
-      persist(c);
-      return c;
-    }
-  };
-
   const signOut = async () => {
-    persist(null);
+    await supabase.auth.signOut();
+
+    setRoles([]);
   };
 
-  const isAdmin = isAdminColaborador(user);
-  const isSubscriber = !!user;
+  const metadataRole =
+    user?.user_metadata
+      ?.role as AppRole;
+
+  const isAdmin =
+    metadataRole === "admin" ||
+    roles.includes("admin");
+
+  const isSubscriber =
+    metadataRole ===
+      "subscriber" ||
+    isAdmin ||
+    roles.includes(
+      "subscriber"
+    );
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAdmin, isSubscriber, signIn, signUp, signOut }}
+      value={{
+        session,
+
+        user,
+
+        roles,
+
+        loading,
+
+        isAdmin,
+
+        isSubscriber,
+
+        signOut,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+function useAuth() {
+  const ctx =
+    useContext(AuthContext);
+
+  if (!ctx)
+    throw new Error(
+      "useAuth must be used inside AuthProvider"
+    );
+
   return ctx;
-}
+};
+
+export { useAuth };
