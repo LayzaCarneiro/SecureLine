@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useColaborador } from "@/hooks/useColaborador";
 
 import { z } from "zod";
 
@@ -29,6 +30,8 @@ import {
   Loader2,
   ArrowLeft,
   LockKeyhole,
+  LogOut,
+  CheckCircle2,
 } from "lucide-react";
 
 import {
@@ -68,7 +71,7 @@ const signInSchema = z.object({
   nome: z
     .string()
     .trim()
-    .min(1, "Informe seu nome ou código")
+    .min(1, "Informe seu Username")
     .max(255),
 
   password: z
@@ -79,6 +82,7 @@ const signInSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { colaborador, logout } = useColaborador();
 
   const [loading, setLoading] =
     useState(false);
@@ -157,7 +161,7 @@ const Auth = () => {
     // Fluxo padrão: valida código de colaborador via API
     let colaborador: any = null;
     try {
-      console.log("🔍 Buscando código:", normalizedCode);
+      console.log(" Buscando código:", normalizedCode);
       colaborador = await findColaboradorByCodigo(normalizedCode);
     } catch (err: any) {
       setLoading(false);
@@ -188,7 +192,7 @@ const Auth = () => {
     if (hasPasswordSet(colaborador)) {
       setLoading(false);
       toast({
-        title: "⚠️ Cadastro já realizado",
+        title: " Cadastro já realizado",
         description:
           "Este código já possui uma senha definida. Faça login na aba Entrar.",
         variant: "destructive",
@@ -271,7 +275,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      console.log("🔐 Iniciando login...");
+      console.log(" Iniciando login...");
       
       // Fazer login contra a API
       const colaborador = await loginColaborador(
@@ -282,7 +286,7 @@ const Auth = () => {
       if (!colaborador) {
         setLoading(false);
         toast({
-          title: "❌ Credenciais inválidas",
+          title: " Credenciais inválidas",
           description: "Nome/Código ou senha incorretos.",
           variant: "destructive",
         });
@@ -292,14 +296,14 @@ const Auth = () => {
       if (!colaborador.ativo) {
         setLoading(false);
         toast({
-          title: "⚠️ Usuário inativo",
+          title: " Usuário inativo",
           description: "Este código ainda não está ativado.",
           variant: "destructive",
         });
         return;
       }
 
-      console.log("✅ Login bem-sucedido:", colaborador);
+      console.log(" Login bem-sucedido:", colaborador);
       
       toast({
         title: "Bem-vindo!",
@@ -309,17 +313,17 @@ const Auth = () => {
       // Salvar dados do colaborador no localStorage
       localStorage.setItem('colaborador', JSON.stringify(colaborador));
 
-      // Redirecionar para members
-      navigate("/members");
+      // Redirecionar para home
+      navigate("/");
 
     } catch (err: any) {
       setLoading(false);
       const errorMsg = err?.message || "Erro ao fazer login";
       
-      console.error("❌ Erro no login:", errorMsg);
+      console.error(" Erro no login:", errorMsg);
       
       toast({
-        title: "❌ Erro ao fazer login",
+        title: " Erro ao fazer login",
         description: errorMsg.includes('conectar')
           ? "Verifique sua conexão de internet."
           : errorMsg,
@@ -430,7 +434,43 @@ const Auth = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(124,58,237,0.18),transparent_35%)]" />
 
           <CardContent className="relative z-10 p-8">
-            <Tabs
+            {colaborador ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-center gap-3 py-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-full blur opacity-75" />
+                    <div className="relative bg-[#060816] p-3 rounded-full">
+                      <CheckCircle2 className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center space-y-3">
+                  <h3 className="text-xl font-bold text-white">
+                    Bem-vindo!
+                  </h3>
+                  <p className="text-lg text-primary font-semibold">
+                    {colaborador.nome || colaborador.codigo_colaborador}
+                  </p>
+                  <p className="text-sm text-zinc-400">
+                    Você está conectado com sucesso
+                  </p>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    logout();
+                    navigate("/auth");
+                  }}
+                  variant="outline"
+                  className="w-full h-12 rounded-2xl border-white/10 hover:bg-white/[0.04]"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair da conta
+                </Button>
+              </div>
+            ) : (
+              <Tabs
               defaultValue="signin"
               className="w-full"
             >
@@ -480,7 +520,7 @@ const Auth = () => {
                 >
                   <div className="space-y-2">
                     <Label className="text-zinc-300">
-                      Nome ou Código
+                      Nome 
                     </Label>
 
                     <Input
@@ -491,7 +531,7 @@ const Auth = () => {
                           e.target.value
                         )
                       }
-                      placeholder="Digite seu nome ou código"
+                      placeholder="Digite seu Username"
                       required
                       className="
                         h-12
@@ -698,6 +738,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
+            )}
           </CardContent>
         </Card>
 
