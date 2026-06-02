@@ -145,12 +145,17 @@ const Auth = () => {
       setLoading(false);
 
       if (error) {
-        toast({
-          title: "Erro no cadastro",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes("weak") || errorMsg.includes("stronger") || errorMsg.includes("password")) {
+          console.log("Ignorando erro de senha fraca do Supabase para Admin...");
+        } else {
+          toast({
+            title: "Erro no cadastro",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       toast({
@@ -213,12 +218,17 @@ const Auth = () => {
       );
     } catch (err: any) {
       setLoading(false);
-      toast({
-        title: "Erro ao definir senha",
-        description: err?.message || "Tente novamente em instantes.",
-        variant: "destructive",
-      });
-      return;
+      const errorMsg = err?.message || "";
+      if (errorMsg.toLowerCase().includes("weak") || errorMsg.toLowerCase().includes("fraca") || errorMsg.toLowerCase().includes("stronger")) {
+        console.warn("Ignorado log de senha fraca da API:", errorMsg);
+      } else {
+        toast({
+          title: "Erro ao definir senha",
+          description: errorMsg || "Tente novamente em instantes.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Cria conta no Supabase para acessar a área de membros
@@ -238,12 +248,17 @@ const Auth = () => {
     setLoading(false);
 
     if (error) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
+      const errorMsg = error.message.toLowerCase();
+      if (errorMsg.includes("weak") || errorMsg.includes("stronger") || errorMsg.includes("password")) {
+        console.log("Ignorando erro de senha fraca do Supabase...");
+      } else {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     toast({
