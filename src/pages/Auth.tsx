@@ -264,7 +264,7 @@ const Auth = () => {
       description: "Senha definida e acesso liberado com sucesso.",
     });
 
-    navigate("/members");
+    window.location.href = "https://secure-line.vercel.app/members";
   };
 
   const handleSignIn = async (
@@ -356,7 +356,7 @@ const Auth = () => {
         };
         localStorage.setItem('colaborador', JSON.stringify(mockColaborador));
         window.dispatchEvent(new Event("colaborador-changed"));
-        navigate("/");
+        window.location.href = "https://secure-line.vercel.app/members";
         return;
       }
 
@@ -412,8 +412,8 @@ const Auth = () => {
       localStorage.setItem('colaborador', JSON.stringify(colaborador));
       window.dispatchEvent(new Event("colaborador-changed"));
 
-      // Redirecionar para home
-      navigate("/");
+      // Redirecionar para área de membros
+      window.location.href = "https://secure-line.vercel.app/members";
 
     } catch (err: any) {
       setLoading(false);
