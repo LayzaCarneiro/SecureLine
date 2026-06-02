@@ -124,7 +124,7 @@ const Auth = () => {
     const normalizedCode = parsed.data.accessCode.trim();
     const supabaseEmail = parsed.data.email.includes("@")
       ? parsed.data.email
-      : `${parsed.data.email}@secureline.local`;
+      : `${parsed.data.email}@secureline.com`;
 
     setLoading(true);
 
@@ -530,6 +530,9 @@ const Auth = () => {
 
                     <Input
                       type="text"
+                      id="signin-username"
+                      name="username"
+                      autoComplete="username"
                       value={nomeIn}
                       onChange={(e) =>
                         setNomeIn(
@@ -664,6 +667,9 @@ const Auth = () => {
 
                     <Input
                       type="text"
+                      id="signup-username"
+                      name="username"
+                      autoComplete="username"
                       placeholder="Digite seu Username"
                       value={emailUp}
                       onChange={(e) =>
