@@ -216,18 +216,8 @@ const Auth = () => {
         parsed.data.email
       );
     } catch (err: any) {
-      setLoading(false);
-      const errorMsg = err?.message || "";
-      if (errorMsg.toLowerCase().includes("weak") || errorMsg.toLowerCase().includes("fraca") || errorMsg.toLowerCase().includes("stronger")) {
-        console.warn("Ignorado log de senha fraca da API:", errorMsg);
-      } else {
-        toast({
-          title: "Erro ao definir senha",
-          description: errorMsg || "Tente novamente em instantes.",
-          variant: "destructive",
-        });
-        return;
-      }
+      // Erros da API externa não bloqueiam o cadastro — logamos e continuamos
+      console.warn("⚠️ Aviso ao atualizar colaborador na API (não bloqueia o cadastro):", err?.message);
     }
 
     // Cria conta no Supabase para acessar a área de membros

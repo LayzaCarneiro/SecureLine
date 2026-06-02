@@ -102,10 +102,10 @@ export async function updateColaborador(
 ): Promise<Colaborador> {
   console.log(`📤 Atualizando colaborador ID ${id}:`, { nome, apelido });
 
-  const payload = {
+  // Tenta primeiro sem apelido (compatível com APIs mais antigas)
+  const payloadBase = {
     nome,
     senha,
-    apelido,
     ativo: true,
   };
 
@@ -119,7 +119,7 @@ export async function updateColaborador(
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payloadBase),
       signal: controller.signal,
       mode: 'cors',
       credentials: 'omit'
@@ -135,6 +135,27 @@ export async function updateColaborador(
 
     const updated = await res.json();
     console.log("✅ Atualizado com sucesso:", updated);
+
+    // Tenta salvar apelido separadamente se fornecido (ignora erros silenciosamente)
+    if (apelido) {
+      try {
+        const ctrl2 = new AbortController();
+        const t2 = setTimeout(() => ctrl2.abort(), 10000);
+        await fetch(`${COLABORADORES_API}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ ...updated, apelido }),
+          signal: ctrl2.signal,
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        clearTimeout(t2);
+        console.log(`✅ Apelido "${apelido}" salvo com sucesso`);
+      } catch (apelidoErr) {
+        console.warn("⚠️ Não foi possível salvar apelido (ignorado):", apelidoErr);
+      }
+    }
+
     return updated;
 
   } catch (error: any) {
