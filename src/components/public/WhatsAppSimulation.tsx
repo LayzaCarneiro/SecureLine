@@ -4,6 +4,9 @@ import {
   Check,
   CheckCheck,
   ChevronRight,
+  Lightbulb,
+  CheckCircle,
+  Search
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -146,26 +149,14 @@ const WhatsAppSimulation = ({
 
   const handleNext = () => {
     if (currentScenario + 1 >= scenarios.length) {
-      const finalAnswers = [
-        ...answers,
-        {
-          scenarioId: scenario.id,
-          scenarioTitle: scenario.title,
-          scamType: scenario.scamType,
-          selectedOption:
-            selectedAnswer as QuizOption,
-          explanation: scenario.explanation,
-        },
-      ];
-
-      const score = finalAnswers.filter(
+      const score = answers.filter(
         (a) => a.selectedOption.isCorrect
       ).length;
 
       onComplete(
         score,
         scenarios.length,
-        finalAnswers
+        answers
       );
     } else {
       setCurrentScenario((prev) => prev + 1);
@@ -579,6 +570,74 @@ const WhatsAppSimulation = ({
                     <p className="text-sm text-zinc-400 leading-relaxed">
                       {scenario.explanation}
                     </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-primary/10 bg-primary/5 p-5">
+                    <h3 className="flex items-center gap-2 text-white font-semibold mb-4">
+                      <Search className="w-4 h-4 text-primary" />
+                      O que indicava que era um golpe?
+                    </h3>
+
+                    <div className="space-y-4">
+                      {scenario.warningSigns.map((item) => (
+                        <div
+                          key={item.title}
+                          className="border-b border-white/5 pb-4 last:border-0"
+                        >
+                          <p className="font-medium text-red-300">
+                            {item.title}
+                          </p>
+
+                          <p className="text-sm text-zinc-400 mt-1">
+                            {item.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-5">
+                    <h3 className="flex items-center gap-2 text-white font-semibold mb-4">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      O que você deveria fazer?
+                    </h3>
+
+                    <div className="space-y-3">
+                      {scenario.correctActions.map((action) => (
+                        <div
+                          key={action}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="text-emerald-400">•</span>
+
+                          <p className="text-sm text-zinc-300">
+                            {action}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-amber-500/10 bg-amber-500/5 p-5">
+                    <h3 className="flex items-center gap-2 text-white font-semibold mb-4">
+                      <Lightbulb className="w-4 h-4 text-amber-400" />
+                      Dica para próximas simulações
+                    </h3>
+
+                    <ul className="space-y-2">
+                      {scenario.nextTips.map((tip) => (
+                        <li
+                          key={tip}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="text-amber-400">•</span>
+
+                          <p className="text-sm text-zinc-300">
+                            {tip}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
                   <Button

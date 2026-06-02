@@ -57,11 +57,11 @@ const Footer = () => (
       <div className="flex flex-col items-center text-center mb-12">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-[0_10px_40px_rgba(124,58,237,0.35)]">
+          <div className="w-11 h-11 flex items-center justify-center">
             <img
               src="/images/logo.svg"
               alt="SecureLine"
-              className="w-6 h-6"
+              className="w-12 h-12"
             />
           </div>
 
