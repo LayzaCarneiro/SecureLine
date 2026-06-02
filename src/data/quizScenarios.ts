@@ -12,6 +12,11 @@ export interface QuizOption {
   feedback: string;
 }
 
+export interface LearningPoint {
+  title: string;
+  description: string;
+}
+
 export interface QuizScenario {
   id: number;
   title: string;
@@ -22,6 +27,10 @@ export interface QuizScenario {
   question: string;
   options: QuizOption[];
   explanation: string;
+
+  warningSigns: LearningPoint[];
+  correctActions: string[];
+  nextTips: string[];
 }
 
 const scenarios: QuizScenario[] = [
@@ -67,6 +76,37 @@ const scenarios: QuizScenario[] = [
       },
     ],
     explanation: "Bancos nunca pedem dados pessoais ou enviam links por WhatsApp. Note o domínio suspeito 'verify-conta.xyz' e o senso de urgência — sinais clássicos de phishing.",
+    // Cenário 1
+    warningSigns: [
+      {
+        title: "Senso de urgência",
+        description:
+          'A frase "sua conta será bloqueada em 2 horas" tenta pressionar você a agir sem pensar.',
+      },
+      {
+        title: "Link suspeito",
+        description:
+          "O domínio verify-conta.xyz não pertence ao banco oficial.",
+      },
+      {
+        title: "Solicitação incomum",
+        description:
+          "Bancos normalmente não enviam links de validação por WhatsApp.",
+      },
+    ],
+
+    correctActions: [
+      "Ignorar o link recebido.",
+      "Não informar dados pessoais.",
+      "Abrir o aplicativo oficial do banco.",
+      "Entrar em contato com o banco pelos canais oficiais.",
+    ],
+
+    nextTips: [
+      "Verifique sempre o domínio do link.",
+      "Desconfie de mensagens urgentes.",
+      "Confirme informações diretamente com a instituição.",
+    ],
   },
   {
     id: 2,
@@ -116,6 +156,37 @@ const scenarios: QuizScenario[] = [
       },
     ],
     explanation: "Na clonagem de WhatsApp, criminosos usam a foto e nome de conhecidos. A melhor defesa é confirmar por ligação no número antigo.",
+    // Cenário 2
+    warningSigns: [
+      {
+        title: "Número desconhecido",
+        description:
+          "A mensagem veio de um número diferente do contato que você já conhece.",
+      },
+      {
+        title: "Pedido de dinheiro",
+        description:
+          "Solicitações de Pix devem sempre ser confirmadas por outro canal.",
+      },
+      {
+        title: "Pressão emocional",
+        description:
+          "O pedido urgente tenta fazer você agir rapidamente sem verificar.",
+      },
+    ],
+
+    correctActions: [
+      "Ligar para o número antigo do contato.",
+      "Confirmar a identidade da pessoa.",
+      "Desconfiar de pedidos financeiros inesperados.",
+      "Só realizar transferências após confirmação.",
+    ],
+
+    nextTips: [
+      "Desconfie de contatos que mudam de número repentinamente.",
+      "Confirme pedidos de dinheiro por ligação.",
+      "Nunca tome decisões financeiras apenas por mensagem.",
+    ],
   },
   {
     id: 3,
@@ -159,6 +230,37 @@ const scenarios: QuizScenario[] = [
       },
     ],
     explanation: "Promoções 'boas demais para ser verdade' são armadilhas. O prazo curto é uma tática para impedir que você pense com calma.",
+    // Cenário 3
+    warningSigns: [
+      {
+        title: "Oferta boa demais para ser verdade",
+        description:
+          "Ganhar um produto caro sem participar de nenhuma promoção é suspeito.",
+      },
+      {
+        title: "Prazo artificial",
+        description:
+          "A oferta válida por poucos minutos serve para gerar pressão.",
+      },
+      {
+        title: "Link desconhecido",
+        description:
+          "O site não possui relação com uma empresa confiável.",
+      },
+    ],
+
+    correctActions: [
+      "Não clicar no link.",
+      "Não preencher formulários desconhecidos.",
+      "Bloquear ou denunciar o contato.",
+      "Ignorar promoções suspeitas.",
+    ],
+
+    nextTips: [
+      "Desconfie de prêmios inesperados.",
+      "Pesquise a empresa antes de fornecer dados.",
+      "Nunca informe dados pessoais em links recebidos por mensagem.",
+    ],
   },
   {
     id: 4,
@@ -202,6 +304,37 @@ const scenarios: QuizScenario[] = [
       },
     ],
     explanation: "O código de verificação é a chave da sua conta. O WhatsApp nunca solicita esse código. Com ele, golpistas assumem total controle do seu WhatsApp.",
+    // Cenário 4
+    warningSigns: [
+      {
+        title: "Falso suporte técnico",
+        description:
+          "Empresas não entram em contato pedindo códigos de verificação.",
+      },
+      {
+        title: "Pedido de código",
+        description:
+          "O código recebido por SMS é pessoal e intransferível.",
+      },
+      {
+        title: "Uso de autoridade",
+        description:
+          'O golpista se apresenta como "suporte" para ganhar confiança.',
+      },
+    ],
+
+    correctActions: [
+      "Nunca compartilhar códigos recebidos por SMS.",
+      "Ignorar a solicitação.",
+      "Ativar a verificação em duas etapas.",
+      "Bloquear o contato suspeito.",
+    ],
+
+    nextTips: [
+      "Códigos de verificação são secretos.",
+      "Nenhuma empresa legítima pede esses códigos.",
+      "Desconfie de mensagens alegando invasão da conta.",
+    ],
   },
   {
     id: 5,
@@ -251,6 +384,37 @@ const scenarios: QuizScenario[] = [
       },
     ],
     explanation: "Golpes de falso fornecedor são comuns em empresas. Sempre confirme alterações bancárias por telefone ou pessoalmente, usando contatos que você já possui.",
+    // Cenário 5
+    warningSigns: [
+      {
+        title: "Mudança bancária inesperada",
+        description:
+          "Alterações de conta para pagamento exigem validação adicional.",
+      },
+      {
+        title: "Solicitação por mensagem",
+        description:
+          "Dados bancários enviados apenas por mensagem podem ser falsos.",
+      },
+      {
+        title: "Ausência de confirmação formal",
+        description:
+          "Mudanças financeiras importantes normalmente seguem processos formais.",
+      },
+    ],
+
+    correctActions: [
+      "Ligar para o fornecedor usando um contato já conhecido.",
+      "Confirmar os novos dados bancários.",
+      "Validar a solicitação com outro responsável.",
+      "Não realizar pagamentos sem confirmação.",
+    ],
+
+    nextTips: [
+      "Sempre confirme alterações bancárias por outro canal.",
+      "Desconfie de mudanças repentinas de conta.",
+      "Valide informações financeiras antes de efetuar pagamentos.",
+    ],
   },
 ];
 
