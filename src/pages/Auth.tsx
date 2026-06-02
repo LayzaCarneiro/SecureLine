@@ -79,7 +79,7 @@ const signInSchema = z.object({
   nome: z
     .string()
     .trim()
-    .min(1, "Informe seu Username")
+    .min(1, "Informe seu Apelido")
     .max(255),
 
   password: z
@@ -609,7 +609,7 @@ const Auth = () => {
                 >
                   <div className="space-y-2">
                     <Label className="text-zinc-300">
-                      Nome 
+                      Username
                     </Label>
 
                     <Input

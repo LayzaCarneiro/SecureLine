@@ -179,12 +179,11 @@ export async function loginColaborador(
     // Reutiliza fetchColaboradores que faz apenas uma requisição
     const lista = await fetchColaboradores();
 
-    // Procura por apelido, nome ou código_colaborador
+    // Procura por apelido ou código_colaborador (nome não é usado no login)
     const colaborador = lista.find((c: Colaborador) => {
       const apelidoMatch = (c.apelido || "").toLowerCase() === nome.toLowerCase();
-      const nomeMatch = (c.nome || "").toLowerCase() === nome.toLowerCase();
       const codigoMatch = (c.codigo_colaborador || "").toUpperCase() === nome.toUpperCase();
-      return apelidoMatch || nomeMatch || codigoMatch;
+      return apelidoMatch || codigoMatch;
     });
 
     if (!colaborador) {
