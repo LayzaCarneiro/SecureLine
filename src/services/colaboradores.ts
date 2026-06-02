@@ -20,60 +20,44 @@ export interface Colaborador {
 const COLABORADORES_API = "https://api-golpe-whatsapp.onrender.com/colaboradores";
 
 /**
- * Fetch all colaboradores from API with retry
+ * Fetch all colaboradores from API (single request, no retries)
  */
 export async function fetchColaboradores(): Promise<Colaborador[]> {
   console.log(`📡 Buscando colaboradores em: ${COLABORADORES_API}`);
 
-  const maxRetries = 3;
-  let lastError: any = null;
+  try {
+    const controller = new AbortController();
+    // 30 seconds timeout to allow Render free tier instance to spin up without timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
+    const res = await fetch(COLABORADORES_API, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit'
+    });
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    clearTimeout(timeoutId);
+    console.log(`📊 Status: ${res.status} ${res.statusText}`);
 
-      const res = await fetch(COLABORADORES_API, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-        mode: 'cors',
-        credentials: 'omit'
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`📊 Status: ${res.status} ${res.statusText}`);
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`API retornou ${res.status}: ${errorBody}`);
-      }
-
-      const data = await res.json();
-      console.log(`✅ Sucesso! ${data.length} colaboradores recebidos`);
-      return data;
-
-    } catch (error: any) {
-      lastError = error;
-      const errorMsg = error?.message || String(error);
-      console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-
-      if (attempt < maxRetries) {
-        console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`API retornou ${res.status}: ${errorBody}`);
     }
-  }
 
-  // Se chegou aqui, todas as tentativas falharam
-  const finalError = lastError?.message || "Falha ao conectar à API";
-  console.error("❌ Todas as tentativas falharam:", finalError);
-  throw new Error(finalError);
+    const data = await res.json();
+    console.log(`✅ Sucesso! ${data.length} colaboradores recebidos`);
+    return data;
+
+  } catch (error: any) {
+    const errorMsg = error?.message || "Falha ao conectar à API";
+    console.error("❌ Erro ao buscar colaboradores:", errorMsg);
+    throw new Error(errorMsg);
+  }
 }
 
 /**
@@ -108,7 +92,7 @@ export async function findColaboradorByCodigo(codigo: string): Promise<Colaborad
 }
 
 /**
- * Update colaborador with nome, senha and apelido
+ * Update colaborador with nome, senha and apelido (single request, no retries)
  */
 export async function updateColaborador(
   id: number,
@@ -125,60 +109,44 @@ export async function updateColaborador(
     ativo: true,
   };
 
-  const maxRetries = 2;
-  let lastError: any = null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
+    const res = await fetch(`${COLABORADORES_API}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit'
+    });
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    clearTimeout(timeoutId);
+    console.log(`📊 Resposta: ${res.status} ${res.statusText}`);
 
-      const res = await fetch(`${COLABORADORES_API}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify(payload),
-        signal: controller.signal,
-        mode: 'cors',
-        credentials: 'omit'
-      });
-
-      clearTimeout(timeoutId);
-      console.log(`📊 Resposta: ${res.status} ${res.statusText}`);
-
-      if (!res.ok) {
-        const errorBody = await res.text();
-        throw new Error(`Erro ${res.status}: ${errorBody}`);
-      }
-
-      const updated = await res.json();
-      console.log("✅ Atualizado com sucesso:", updated);
-      return updated;
-
-    } catch (error: any) {
-      lastError = error;
-      const errorMsg = error?.message || String(error);
-      console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-
-      if (attempt < maxRetries) {
-        console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`Erro ${res.status}: ${errorBody}`);
     }
-  }
 
-  const finalError = lastError?.message || "Falha ao atualizar colaborador";
-  console.error("❌ Todas as tentativas falharam:", finalError);
-  throw new Error(finalError);
+    const updated = await res.json();
+    console.log("✅ Atualizado com sucesso:", updated);
+    return updated;
+
+  } catch (error: any) {
+    const errorMsg = error?.message || "Falha ao atualizar colaborador";
+    console.error("❌ Erro ao atualizar colaborador:", errorMsg);
+    throw new Error(errorMsg);
+  }
 }
 
 /**
- * Login do colaborador por nome e senha
- * Busca na API e valida credenciais
+ * Login do colaborador por nome e senha (apelido/código/nome)
+ * Busca na API e valida credenciais (single request, no retries)
  */
 export async function loginColaborador(
   nome: string,
@@ -186,72 +154,37 @@ export async function loginColaborador(
 ): Promise<Colaborador | null> {
   console.log(`🔐 Tentando login para: ${nome}`);
 
-  const maxRetries = 3;
-  let lastError: any = null;
+  try {
+    // Reutiliza fetchColaboradores que faz apenas uma requisição
+    const lista = await fetchColaboradores();
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
+    // Procura por apelido, nome ou código_colaborador
+    const colaborador = lista.find((c: Colaborador) => {
+      const apelidoMatch = (c.apelido || "").toLowerCase() === nome.toLowerCase();
+      const nomeMatch = (c.nome || "").toLowerCase() === nome.toLowerCase();
+      const codigoMatch = (c.codigo_colaborador || "").toUpperCase() === nome.toUpperCase();
+      return apelidoMatch || nomeMatch || codigoMatch;
+    });
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-      const res = await fetch(COLABORADORES_API, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-        mode: 'cors',
-        credentials: 'omit'
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        throw new Error(`API retornou ${res.status}`);
-      }
-
-      const lista = await res.json();
-
-      // Procura por apelido, nome ou código_colaborador
-      const colaborador = lista.find((c: Colaborador) => {
-        const apelidoMatch = (c.apelido || "").toLowerCase() === nome.toLowerCase();
-        const nomeMatch = (c.nome || "").toLowerCase() === nome.toLowerCase();
-        const codigoMatch = (c.codigo_colaborador || "").toUpperCase() === nome.toUpperCase();
-        return apelidoMatch || nomeMatch || codigoMatch;
-      });
-
-      if (!colaborador) {
-        console.warn(`⚠️ Usuário "${nome}" não encontrado`);
-        return null;
-      }
-
-      // Valida senha
-      if (colaborador.senha !== senha) {
-        console.warn(`⚠️ Senha incorreta para "${nome}"`);
-        return null;
-      }
-
-      console.log(`✅ Login bem-sucedido:`, colaborador);
-      return colaborador;
-
-    } catch (error: any) {
-      lastError = error;
-      const errorMsg = error?.message || String(error);
-      console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-
-      if (attempt < maxRetries) {
-        console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+    if (!colaborador) {
+      console.warn(`⚠️ Usuário "${nome}" não encontrado`);
+      return null;
     }
-  }
 
-  const finalError = lastError?.message || "Falha ao fazer login";
-  console.error("❌ Todas as tentativas falharam:", finalError);
-  throw new Error(finalError);
+    // Valida senha
+    if (colaborador.senha !== senha) {
+      console.warn(`⚠️ Senha incorreta para "${nome}"`);
+      return null;
+    }
+
+    console.log(`✅ Login bem-sucedido:`, colaborador);
+    return colaborador;
+
+  } catch (error: any) {
+    const errorMsg = error?.message || "Falha ao fazer login";
+    console.error("❌ Erro no login:", errorMsg);
+    throw new Error(errorMsg);
+  }
 }
 
 /**
