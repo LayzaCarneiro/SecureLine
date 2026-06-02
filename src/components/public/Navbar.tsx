@@ -4,6 +4,7 @@ import {
   X,
   UserCircle,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -13,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useColaborador } from "@/hooks/useColaborador";
 
 interface NavbarProps {
   onNavigate: (
@@ -30,6 +32,7 @@ const Navbar = ({
     useState(false);
 
   const { user } = useAuth();
+  const { colaborador, logout } = useColaborador();
 
   const links = [
     {
@@ -168,28 +171,55 @@ const Navbar = ({
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="
-              h-11
-              rounded-2xl
-              border-white/10
-              bg-white/[0.03]
-              hover:bg-white/[0.06]
-              text-white
-              backdrop-blur-xl
-            "
-          >
-            <Link to={user ? "/members" : "/auth"}>
-              <UserCircle className="w-4 h-4 mr-2" />
-
-              {user
-                ? "Área de membros"
-                : "Entrar"}
-            </Link>
-          </Button>
+          {colaborador ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-white/10 bg-white/[0.03]">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                  <UserCircle className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-sm font-medium text-white">
+                  {colaborador.nome || colaborador.codigo_colaborador}
+                </span>
+              </div>
+              
+              <Button
+                onClick={logout}
+                variant="outline"
+                size="sm"
+                className="
+                  h-11
+                  rounded-2xl
+                  border-white/10
+                  bg-white/[0.03]
+                  hover:bg-white/[0.06]
+                  text-zinc-300
+                  hover:text-white
+                "
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="
+                h-11
+                rounded-2xl
+                border-white/10
+                bg-white/[0.03]
+                hover:bg-white/[0.06]
+                text-white
+                backdrop-blur-xl
+              "
+            >
+              <Link to="/auth">
+                <UserCircle className="w-4 h-4 mr-2" />
+                Entrar
+              </Link>
+            </Button>
+          )}
 
           <Button
             onClick={() =>
@@ -296,10 +326,13 @@ const Navbar = ({
               })}
 
               <Link
-                to={user ? "/members" : "/auth"}
-                onClick={() =>
-                  setMobileOpen(false)
-                }
+                to={!colaborador ? "/auth" : "#"}
+                onClick={() => {
+                  if (colaborador) {
+                    logout();
+                  }
+                  setMobileOpen(false);
+                }}
                 className="
                   w-full
                   flex items-center justify-between
@@ -315,8 +348,8 @@ const Navbar = ({
                 <div className="flex items-center gap-2">
                   <UserCircle className="w-4 h-4" />
 
-                  {user
-                    ? "Área de membros"
+                  {colaborador
+                    ? colaborador.nome || colaborador.codigo_colaborador
                     : "Entrar"}
                 </div>
 

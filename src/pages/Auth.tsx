@@ -312,6 +312,7 @@ const Auth = () => {
 
       // Salvar dados do colaborador no localStorage
       localStorage.setItem('colaborador', JSON.stringify(colaborador));
+      window.dispatchEvent(new Event("colaborador-changed"));
 
       // Redirecionar para home
       navigate("/");

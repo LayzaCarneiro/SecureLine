@@ -22,21 +22,36 @@ export const useColaborador = () => {
 
   useEffect(() => {
     // Recuperar dados do localStorage ao montar
-    const stored = localStorage.getItem("colaborador");
-    if (stored) {
-      try {
-        setColaborador(JSON.parse(stored));
-      } catch (err) {
-        console.error("Erro ao parsejar colaborador:", err);
+    const readFromStorage = () => {
+      const stored = localStorage.getItem("colaborador");
+      if (stored) {
+        try {
+          setColaborador(JSON.parse(stored));
+        } catch (err) {
+          console.error("Erro ao parsejar colaborador:", err);
+          setColaborador(null);
+        }
+      } else {
         setColaborador(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    readFromStorage();
+
+    // Escuta evento customizado para atualizar estado na mesma aba
+    const handleChange = () => readFromStorage();
+    window.addEventListener("colaborador-changed", handleChange);
+
+    return () => {
+      window.removeEventListener("colaborador-changed", handleChange);
+    };
   }, []);
 
   const logout = () => {
     localStorage.removeItem("colaborador");
     setColaborador(null);
+    window.dispatchEvent(new Event("colaborador-changed"));
   };
 
   return {
