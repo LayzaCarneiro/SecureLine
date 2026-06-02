@@ -18,7 +18,8 @@ interface UseColaboradorSignUpResult extends UseColaboradorSignUpState {
   updateWithPasswordAndName: (
     id: number,
     nome: string,
-    senha: string
+    senha: string,
+    apelido?: string
   ) => Promise<Colaborador | null>;
   reset: () => void;
 }
@@ -127,7 +128,8 @@ export function useColaboradorSignUp(): UseColaboradorSignUpResult {
     async (
       id: number,
       nome: string,
-      senha: string
+      senha: string,
+      apelido?: string
     ): Promise<Colaborador | null> => {
       setState((prev) => ({
         ...prev,
@@ -136,7 +138,7 @@ export function useColaboradorSignUp(): UseColaboradorSignUpResult {
       }));
 
       try {
-        const updated = await updateColaborador(id, nome, senha);
+        const updated = await updateColaborador(id, nome, senha, apelido);
 
         setState({
           loading: false,

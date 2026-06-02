@@ -54,7 +54,7 @@ const signUpSchema = z.object({
   email: z
     .string()
     .trim()
-    .email("E-mail inválido")
+    .min(3, "Username/E-mail muito curto")
     .max(255),
 
   password: z
@@ -122,13 +122,16 @@ const Auth = () => {
     }
 
     const normalizedCode = parsed.data.accessCode.trim();
+    const supabaseEmail = parsed.data.email.includes("@")
+      ? parsed.data.email
+      : `${parsed.data.email}@secureline.local`;
 
     setLoading(true);
 
     // Admin code bypassa a API e cria conta admin diretamente no Supabase
     if (normalizedCode === ADMIN_CODE) {
       const { error } = await supabase.auth.signUp({
-        email: parsed.data.email,
+        email: supabaseEmail,
         password: parsed.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/members`,
@@ -200,12 +203,13 @@ const Auth = () => {
       return;
     }
 
-    // Atualiza colaborador na API com nome + senha
+    // Atualiza colaborador na API com nome + senha + apelido
     try {
       await updateColaborador(
         colaborador.id,
         parsed.data.fullName,
-        parsed.data.password
+        parsed.data.password,
+        parsed.data.email
       );
     } catch (err: any) {
       setLoading(false);
@@ -219,7 +223,7 @@ const Auth = () => {
 
     // Cria conta no Supabase para acessar a área de membros
     const { error } = await supabase.auth.signUp({
-      email: parsed.data.email,
+      email: supabaseEmail,
       password: parsed.data.password,
       options: {
         emailRedirectTo: `${window.location.origin}/members`,
@@ -659,7 +663,8 @@ const Auth = () => {
                     </Label>
 
                     <Input
-                      type="email"
+                      type="text"
+                      placeholder="Digite seu Username"
                       value={emailUp}
                       onChange={(e) =>
                         setEmailUp(

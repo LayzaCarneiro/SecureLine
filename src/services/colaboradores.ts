@@ -24,14 +24,14 @@ const COLABORADORES_API = "https://api-golpe-whatsapp.onrender.com/colaboradores
  */
 export async function fetchColaboradores(): Promise<Colaborador[]> {
   console.log(`📡 Buscando colaboradores em: ${COLABORADORES_API}`);
-  
+
   const maxRetries = 3;
   let lastError: any = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
@@ -57,12 +57,12 @@ export async function fetchColaboradores(): Promise<Colaborador[]> {
       const data = await res.json();
       console.log(`✅ Sucesso! ${data.length} colaboradores recebidos`);
       return data;
-      
+
     } catch (error: any) {
       lastError = error;
       const errorMsg = error?.message || String(error);
       console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-      
+
       if (attempt < maxRetries) {
         console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -81,10 +81,10 @@ export async function fetchColaboradores(): Promise<Colaborador[]> {
  */
 export async function findColaboradorByCodigo(codigo: string): Promise<Colaborador | null> {
   console.log(`🔍 Procurando colaborador com código: ${codigo}`);
-  
+
   try {
     const lista = await fetchColaboradores();
-    
+
     const encontrado = lista.find(
       (c) =>
         (c.codigo_colaborador || "").trim().toUpperCase() ===
@@ -94,7 +94,7 @@ export async function findColaboradorByCodigo(codigo: string): Promise<Colaborad
     if (encontrado) {
       console.log(`✅ Colaborador encontrado:`, encontrado);
     } else {
-      console.warn(`⚠️ Código não encontrado. Códigos disponíveis:`, 
+      console.warn(`⚠️ Código não encontrado. Códigos disponíveis:`,
         lista.map(c => c.codigo_colaborador).join(', ')
       );
     }
@@ -108,18 +108,20 @@ export async function findColaboradorByCodigo(codigo: string): Promise<Colaborad
 }
 
 /**
- * Update colaborador with nome and senha
+ * Update colaborador with nome, senha and apelido
  */
 export async function updateColaborador(
   id: number,
   nome: string,
-  senha: string
+  senha: string,
+  apelido?: string
 ): Promise<Colaborador> {
-  console.log(`📤 Atualizando colaborador ID ${id}:`, { nome });
-  
+  console.log(`📤 Atualizando colaborador ID ${id}:`, { nome, apelido });
+
   const payload = {
     nome,
     senha,
+    apelido,
     ativo: true,
   };
 
@@ -129,13 +131,13 @@ export async function updateColaborador(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
       const res = await fetch(`${COLABORADORES_API}/${id}`, {
         method: "PUT",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
@@ -156,12 +158,12 @@ export async function updateColaborador(
       const updated = await res.json();
       console.log("✅ Atualizado com sucesso:", updated);
       return updated;
-      
+
     } catch (error: any) {
       lastError = error;
       const errorMsg = error?.message || String(error);
       console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-      
+
       if (attempt < maxRetries) {
         console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -183,14 +185,14 @@ export async function loginColaborador(
   senha: string
 ): Promise<Colaborador | null> {
   console.log(`🔐 Tentando login para: ${nome}`);
-  
+
   const maxRetries = 3;
   let lastError: any = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
-      
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -212,12 +214,13 @@ export async function loginColaborador(
       }
 
       const lista = await res.json();
-      
-      // Procura por nome ou código_colaborador
+
+      // Procura por apelido, nome ou código_colaborador
       const colaborador = lista.find((c: Colaborador) => {
+        const apelidoMatch = (c.apelido || "").toLowerCase() === nome.toLowerCase();
         const nomeMatch = (c.nome || "").toLowerCase() === nome.toLowerCase();
         const codigoMatch = (c.codigo_colaborador || "").toUpperCase() === nome.toUpperCase();
-        return nomeMatch || codigoMatch;
+        return apelidoMatch || nomeMatch || codigoMatch;
       });
 
       if (!colaborador) {
@@ -233,12 +236,12 @@ export async function loginColaborador(
 
       console.log(`✅ Login bem-sucedido:`, colaborador);
       return colaborador;
-      
+
     } catch (error: any) {
       lastError = error;
       const errorMsg = error?.message || String(error);
       console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
-      
+
       if (attempt < maxRetries) {
         console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
         await new Promise(resolve => setTimeout(resolve, 2000));
