@@ -18,6 +18,7 @@ import {
 import { motion } from "framer-motion";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useColaborador } from "@/hooks/useColaborador";
 
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +33,8 @@ const MembersLayout = ({
     isAdmin,
   } = useAuth();
 
+  const { colaborador, logout } = useColaborador();
+
   const navigate = useNavigate();
 
   const { pathname } =
@@ -39,6 +42,7 @@ const MembersLayout = ({
 
   const handleSignOut =
     async () => {
+      logout();
       await signOut();
 
       navigate("/");
@@ -160,7 +164,7 @@ const MembersLayout = ({
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-white">
-                {user?.email}
+                {colaborador?.nome || colaborador?.codigo_colaborador || "Usuário"}
               </p>
             </div>
 
