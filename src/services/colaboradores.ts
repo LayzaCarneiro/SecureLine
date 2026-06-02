@@ -175,6 +175,83 @@ export async function updateColaborador(
 }
 
 /**
+ * Login do colaborador por nome e senha
+ * Busca na API e valida credenciais
+ */
+export async function loginColaborador(
+  nome: string,
+  senha: string
+): Promise<Colaborador | null> {
+  console.log(`🔐 Tentando login para: ${nome}`);
+  
+  const maxRetries = 3;
+  let lastError: any = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Tentativa ${attempt}/${maxRetries}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(COLABORADORES_API, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        throw new Error(`API retornou ${res.status}`);
+      }
+
+      const lista = await res.json();
+      
+      // Procura por nome ou código_colaborador
+      const colaborador = lista.find((c: Colaborador) => {
+        const nomeMatch = (c.nome || "").toLowerCase() === nome.toLowerCase();
+        const codigoMatch = (c.codigo_colaborador || "").toUpperCase() === nome.toUpperCase();
+        return nomeMatch || codigoMatch;
+      });
+
+      if (!colaborador) {
+        console.warn(`⚠️ Usuário "${nome}" não encontrado`);
+        return null;
+      }
+
+      // Valida senha
+      if (colaborador.senha !== senha) {
+        console.warn(`⚠️ Senha incorreta para "${nome}"`);
+        return null;
+      }
+
+      console.log(`✅ Login bem-sucedido:`, colaborador);
+      return colaborador;
+      
+    } catch (error: any) {
+      lastError = error;
+      const errorMsg = error?.message || String(error);
+      console.warn(`❌ Tentativa ${attempt} falhou:`, errorMsg);
+      
+      if (attempt < maxRetries) {
+        console.log(`⏳ Aguardando 2s antes de tentar novamente...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+  }
+
+  const finalError = lastError?.message || "Falha ao fazer login";
+  console.error("❌ Todas as tentativas falharam:", finalError);
+  throw new Error(finalError);
+}
+
+/**
  * Check if colaborador already has password set
  */
 export function hasPasswordSet(colaborador: Colaborador): boolean {

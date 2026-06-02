@@ -36,6 +36,7 @@ import {
   updateColaborador,
   hasPasswordSet,
   isActive,
+  loginColaborador,
 } from "@/services/colaboradores";
 
 const ADMIN_CODE = "AdminSecureL1n&";
@@ -64,10 +65,10 @@ const signUpSchema = z.object({
 });
 
 const signInSchema = z.object({
-  email: z
+  nome: z
     .string()
     .trim()
-    .email("E-mail inválido")
+    .min(1, "Informe seu nome ou código")
     .max(255),
 
   password: z
@@ -89,7 +90,7 @@ const Auth = () => {
   const [accessCode, setAccessCode] = useState("");
 
   // SIGN IN
-  const [emailIn, setEmailIn] = useState("");
+  const [nomeIn, setNomeIn] = useState("");
   const [passwordIn, setPasswordIn] = useState("");
 
   const handleSignUp = async (
@@ -162,10 +163,10 @@ const Auth = () => {
       setLoading(false);
       const errorMsg = err?.message || "Erro desconhecido";
       
-      console.error("❌ Erro ao buscar código:", errorMsg);
+      console.error(" Erro ao buscar código:", errorMsg);
       
       toast({
-        title: "❌ Não foi possível verificar o código",
+        title: " Não foi possível verificar o código",
         description: errorMsg.includes('conectar') 
           ? "Verifique sua conexão de internet ou tente novamente."
           : "Não conseguimos validar seu código. Tente novamente.",
@@ -177,7 +178,7 @@ const Auth = () => {
     if (!colaborador) {
       setLoading(false);
       toast({
-        title: "❌ Código não encontrado",
+        title: " Código não encontrado",
         description: "O código de acesso informado não foi encontrado no sistema.",
         variant: "destructive",
       });
@@ -252,7 +253,7 @@ const Auth = () => {
 
     const parsed =
       signInSchema.safeParse({
-        email: emailIn,
+        nome: nomeIn,
         password: passwordIn,
       });
 
@@ -269,27 +270,62 @@ const Auth = () => {
 
     setLoading(true);
 
-    const { error } =
-      await supabase.auth.signInWithPassword(
-        {
-          email: parsed.data.email,
-          password: parsed.data.password,
-        }
+    try {
+      console.log("🔐 Iniciando login...");
+      
+      // Fazer login contra a API
+      const colaborador = await loginColaborador(
+        parsed.data.nome,
+        parsed.data.password
       );
 
-    setLoading(false);
+      if (!colaborador) {
+        setLoading(false);
+        toast({
+          title: "❌ Credenciais inválidas",
+          description: "Nome/Código ou senha incorretos.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (error) {
+      if (!colaborador.ativo) {
+        setLoading(false);
+        toast({
+          title: "⚠️ Usuário inativo",
+          description: "Este código ainda não está ativado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("✅ Login bem-sucedido:", colaborador);
+      
       toast({
-        title: "Falha ao entrar",
-        description: error.message,
-        variant: "destructive",
+        title: "Bem-vindo!",
+        description: `Autenticado como ${colaborador.nome || colaborador.codigo_colaborador}`,
       });
 
-      return;
-    }
+      // Salvar dados do colaborador no localStorage
+      localStorage.setItem('colaborador', JSON.stringify(colaborador));
 
-    navigate("/members");
+      // Redirecionar para members
+      navigate("/members");
+
+    } catch (err: any) {
+      setLoading(false);
+      const errorMsg = err?.message || "Erro ao fazer login";
+      
+      console.error("❌ Erro no login:", errorMsg);
+      
+      toast({
+        title: "❌ Erro ao fazer login",
+        description: errorMsg.includes('conectar')
+          ? "Verifique sua conexão de internet."
+          : errorMsg,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -444,17 +480,18 @@ const Auth = () => {
                 >
                   <div className="space-y-2">
                     <Label className="text-zinc-300">
-                      E-mail
+                      Nome ou Código
                     </Label>
 
                     <Input
-                      type="email"
-                      value={emailIn}
+                      type="text"
+                      value={nomeIn}
                       onChange={(e) =>
-                        setEmailIn(
+                        setNomeIn(
                           e.target.value
                         )
                       }
+                      placeholder="Digite seu nome ou código"
                       required
                       className="
                         h-12
