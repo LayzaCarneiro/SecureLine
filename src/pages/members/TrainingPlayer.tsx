@@ -22,17 +22,19 @@ const TrainingPlayer = () => {
   const [resultadoTesteId, setResultadoTesteId] = useState<number | null>(null);
 
   // Recupera o ID do colaborador logado do localStorage
-  const getColaboradorId = (): number | null => {
+  const getColaboradorId = (): number => {
     try {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
         const parsed = JSON.parse(stored);
-        return parsed?.id ?? null;
+        if (parsed && typeof parsed.id === 'number') {
+          return parsed.id;
+        }
       }
     } catch {
       // ignora erro de parsing
     }
-    return null;
+    return 1; // Fallback para colaborador 1 (admin ou teste local)
   };
 
   useEffect(() => {

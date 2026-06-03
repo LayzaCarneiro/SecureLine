@@ -49,82 +49,94 @@ const MembersDashboard = () => {
   const [loading, setLoading] =
     useState(true);
 
+  const [colaboradorNome, setColaboradorNome] = useState<string>("usuário");
+
   // Recupera o ID do colaborador logado do localStorage
-  const getColaboradorId = (): number | null => {
+  const getColaboradorId = (): number => {
     try {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
         const parsed = JSON.parse(stored);
-        return parsed?.id ?? null;
+        if (parsed && typeof parsed.id === 'number') {
+          return parsed.id;
+        }
       }
     } catch {
       // ignora
     }
-    return null;
+    return 1; // Fallback para colaborador 1 (admin ou teste local)
   };
 
   useEffect(() => {
-    if (!user) return;
-
     (async () => {
       try {
+        // Resolve o nome do colaborador
+        const storedColab = localStorage.getItem("colaborador");
+        if (storedColab) {
+          try {
+            const parsed = JSON.parse(storedColab);
+            setColaboradorNome(parsed?.nome || parsed?.apelido || user?.user_metadata?.full_name || "usuário");
+          } catch {
+            // ignore
+          }
+        } else if (user?.user_metadata?.full_name) {
+          setColaboradorNome(user.user_metadata.full_name);
+        }
+
         const colaboradorId = getColaboradorId();
-        if (colaboradorId) {
-          // Busca treinamentos, resultados e respostas da API em paralelo
-          const [apiTrainings, apiResultados, apiRespostas] = await Promise.all([
-            fetchTrainingsFromAPI(),
-            fetchResultados(),
-            fetchRespostas(),
-          ]);
+        
+        // Busca treinamentos, resultados e respostas da API em paralelo
+        const [apiTrainings, apiResultados, apiRespostas] = await Promise.all([
+          fetchTrainingsFromAPI(),
+          fetchResultados(),
+          fetchRespostas(),
+        ]);
 
-          // Define os títulos de treinamentos
-          const titlesMap = Object.fromEntries(
-            apiTrainings.map((t) => [t.id, t.title])
-          );
-          setTrainingTitles(titlesMap);
+        // Define os títulos de treinamentos
+        const titlesMap = Object.fromEntries(
+          apiTrainings.map((t) => [t.id, t.title])
+        );
+        setTrainingTitles(titlesMap);
 
-          // Cria mapa de cenarioId (cenarioGolpeId) para trainingId (tipoGolpeId)
-          const scenarioToTrainingIdMap = new Map<number, string>();
-          for (const t of apiTrainings) {
-            for (const step of t.content.steps) {
-              scenarioToTrainingIdMap.set(Number(step.id), t.id);
-            }
+        // Cria mapa de cenarioId (cenarioGolpeId) para trainingId (tipoGolpeId)
+        const scenarioToTrainingIdMap = new Map<number, string>();
+        for (const t of apiTrainings) {
+          for (const step of t.content.steps) {
+            scenarioToTrainingIdMap.set(Number(step.id), t.id);
+          }
+        }
+
+        // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
+        const myResultados = apiResultados.filter(
+          (r) => r.colaboradorId === colaboradorId && r.total_acertos !== null
+        );
+
+        // Mapeia os resultados da API para o formato Attempt esperado no dashboard
+        const mappedAttempts: Attempt[] = myResultados.map((r) => {
+          // Acha as respostas deste resultado para descobrir o trainingId
+          const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
+          let trainingId = "";
+          if (rAnswers.length > 0) {
+            const firstCenarioId = rAnswers[0].cenarioGolpeId;
+            trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
           }
 
-          // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
-          const myResultados = apiResultados.filter(
-            (r) => r.colaboradorId === colaboradorId && r.total_acertos !== null
-          );
+          return {
+            id: String(r.id),
+            training_id: trainingId,
+            score: r.total_acertos || 0,
+            total: (r.total_acertos || 0) + (r.total_erros || 0),
+            percentage: r.score || 0,
+            completed_at: r.created_at || new Date().toISOString(),
+          };
+        });
 
-          // Mapeia os resultados da API para o formato Attempt esperado no dashboard
-          const mappedAttempts: Attempt[] = myResultados.map((r) => {
-            // Acha as respostas deste resultado para descobrir o trainingId
-            const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
-            let trainingId = "";
-            if (rAnswers.length > 0) {
-              const firstCenarioId = rAnswers[0].cenarioGolpeId;
-              trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
-            }
+        // Ordena por data (mais recentes primeiro)
+        mappedAttempts.sort(
+          (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+        );
 
-            return {
-              id: String(r.id),
-              training_id: trainingId,
-              score: r.total_acertos || 0,
-              total: (r.total_acertos || 0) + (r.total_erros || 0),
-              percentage: r.score || 0,
-              completed_at: r.created_at || new Date().toISOString(),
-            };
-          });
-
-          // Ordena por data (mais recentes primeiro)
-          mappedAttempts.sort(
-            (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
-          );
-
-          setAttempts(mappedAttempts);
-        } else {
-          setAttempts([]);
-        }
+        setAttempts(mappedAttempts);
       } catch (err) {
         console.warn("⚠️ Erro ao carregar dados do dashboard da API:", err);
       }
@@ -218,9 +230,7 @@ const MembersDashboard = () => {
                     bg-clip-text
                   "
                 >
-                  {user?.user_metadata
-                    ?.full_name ||
-                    "usuário"}
+                  {colaboradorNome}
                 </span>
               </h1>
 
