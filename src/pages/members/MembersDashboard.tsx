@@ -113,12 +113,20 @@ const MembersDashboard = () => {
 
         // Mapeia os resultados da API para o formato Attempt esperado no dashboard
         const mappedAttempts: Attempt[] = myResultados.map((r) => {
-          // Acha as respostas deste resultado para descobrir o trainingId
-          const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
-          let trainingId = "";
-          if (rAnswers.length > 0) {
-            const firstCenarioId = rAnswers[0].cenarioGolpeId;
-            trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
+          // Acha o trainingId salvo localmente ou tenta deduzir pelas respostas
+          let trainingId = localStorage.getItem(`training_id_for_result_${r.id}`) || "";
+          
+          if (!trainingId) {
+            const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
+            if (rAnswers.length > 0) {
+              const firstCenarioId = Number(rAnswers[0].cenarioGolpeId);
+              trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
+            }
+          }
+
+          // Se mesmo assim não achar, usa o primeiro treinamento como fallback
+          if (!trainingId && apiTrainings.length > 0) {
+            trainingId = apiTrainings[0].id;
           }
 
           return {

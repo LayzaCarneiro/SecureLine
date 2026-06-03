@@ -56,6 +56,7 @@ const TrainingPlayer = () => {
           try {
             const rId = await createResultado(colaboradorId);
             setResultadoTesteId(rId);
+            localStorage.setItem(`training_id_for_result_${rId}`, id);
           } catch (createErr) {
             console.error("⚠️ Não foi possível criar resultado no backend:", createErr);
           }
