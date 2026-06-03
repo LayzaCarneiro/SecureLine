@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { supabase } from "@/integrations/supabase/client";
 
-import { fetchTrainingsFromAPI } from "@/services/tiposGolpe";
+import { fetchTrainingsFromAPI, fetchResultados, fetchRespostas } from "@/services/tiposGolpe";
 
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -49,36 +49,84 @@ const MembersDashboard = () => {
   const [loading, setLoading] =
     useState(true);
 
+  // Recupera o ID do colaborador logado do localStorage
+  const getColaboradorId = (): number | null => {
+    try {
+      const stored = localStorage.getItem("colaborador");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed?.id ?? null;
+      }
+    } catch {
+      // ignora
+    }
+    return null;
+  };
+
   useEffect(() => {
     if (!user) return;
 
     (async () => {
-      // Busca tentativas do Supabase
-      const { data: atts } =
-        await supabase
-          .from("training_attempts")
-          .select("*")
-          .order("completed_at", {
-            ascending: false,
+      try {
+        const colaboradorId = getColaboradorId();
+        if (colaboradorId) {
+          // Busca treinamentos, resultados e respostas da API em paralelo
+          const [apiTrainings, apiResultados, apiRespostas] = await Promise.all([
+            fetchTrainingsFromAPI(),
+            fetchResultados(),
+            fetchRespostas(),
+          ]);
+
+          // Define os títulos de treinamentos
+          const titlesMap = Object.fromEntries(
+            apiTrainings.map((t) => [t.id, t.title])
+          );
+          setTrainingTitles(titlesMap);
+
+          // Cria mapa de cenarioId (cenarioGolpeId) para trainingId (tipoGolpeId)
+          const scenarioToTrainingIdMap = new Map<number, string>();
+          for (const t of apiTrainings) {
+            for (const step of t.content.steps) {
+              scenarioToTrainingIdMap.set(Number(step.id), t.id);
+            }
+          }
+
+          // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
+          const myResultados = apiResultados.filter(
+            (r) => r.colaboradorId === colaboradorId && r.total_acertos !== null
+          );
+
+          // Mapeia os resultados da API para o formato Attempt esperado no dashboard
+          const mappedAttempts: Attempt[] = myResultados.map((r) => {
+            // Acha as respostas deste resultado para descobrir o trainingId
+            const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
+            let trainingId = "";
+            if (rAnswers.length > 0) {
+              const firstCenarioId = rAnswers[0].cenarioGolpeId;
+              trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
+            }
+
+            return {
+              id: String(r.id),
+              training_id: trainingId,
+              score: r.total_acertos || 0,
+              total: (r.total_acertos || 0) + (r.total_erros || 0),
+              percentage: r.score || 0,
+              completed_at: r.created_at || new Date().toISOString(),
+            };
           });
 
-      setAttempts(
-        (atts as Attempt[]) ?? []
-      );
+          // Ordena por data (mais recentes primeiro)
+          mappedAttempts.sort(
+            (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+          );
 
-      // Busca títulos dos treinamentos da API
-      try {
-        const apiTrainings = await fetchTrainingsFromAPI();
-        setTrainingTitles(
-          Object.fromEntries(
-            apiTrainings.map((t) => [
-              t.id,
-              t.title,
-            ])
-          )
-        );
+          setAttempts(mappedAttempts);
+        } else {
+          setAttempts([]);
+        }
       } catch (err) {
-        console.warn("⚠️ Não foi possível carregar títulos dos treinamentos da API:", err);
+        console.warn("⚠️ Erro ao carregar dados do dashboard da API:", err);
       }
 
       setLoading(false);

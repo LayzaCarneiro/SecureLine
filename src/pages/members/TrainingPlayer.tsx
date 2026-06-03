@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MembersLayout from "@/components/members/MembersLayout";
-import { getTrainingByIdFromAPI, salvarResposta } from "@/services/tiposGolpe";
+import { getTrainingByIdFromAPI, salvarResposta, createResultado, updateResultado } from "@/services/tiposGolpe";
 import type { TrainingFromAPI, TrainingStep, TrainingOption } from "@/services/tiposGolpe";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const TrainingPlayer = () => {
   const [selected, setSelected] = useState<TrainingOption | null>(null);
   const [answers, setAnswers] = useState<{ stepId: string; optionId: string; isCorrect: boolean }[]>([]);
   const [done, setDone] = useState(false);
+  const [resultadoTesteId, setResultadoTesteId] = useState<number | null>(null);
 
   // Recupera o ID do colaborador logado do localStorage
   const getColaboradorId = (): number | null => {
@@ -46,6 +47,17 @@ const TrainingPlayer = () => {
         }
         setTraining(data);
         setCurrentStepId(data.content?.steps?.[0]?.id ?? null);
+
+        // Criar o resultado (sessão) no início
+        const colaboradorId = getColaboradorId();
+        if (colaboradorId) {
+          try {
+            const rId = await createResultado(colaboradorId);
+            setResultadoTesteId(rId);
+          } catch (createErr) {
+            console.error("⚠️ Não foi possível criar resultado no backend:", createErr);
+          }
+        }
       } catch (error: any) {
         toast({
           title: "Erro ao carregar treinamento",
@@ -75,15 +87,17 @@ const TrainingPlayer = () => {
 
     // Salva a resposta na API imediatamente
     const colaboradorId = getColaboradorId();
-    if (colaboradorId && currentStep) {
+    if (colaboradorId && currentStep && resultadoTesteId) {
       salvarResposta({
-        colaboradorId,
-        cenarioId: Number(currentStep.id),
-        opcaoId: Number(opt.id),
-        correta: opt.isCorrect,
+        acertou: opt.isCorrect,
+        opcaoRespostaId: Number(opt.id),
+        cenarioGolpeId: Number(currentStep.id),
+        resultadoTesteId: resultadoTesteId,
       }).catch((err) => {
         console.warn("⚠️ Erro ao salvar resposta (não bloqueia o fluxo):", err?.message);
       });
+    } else {
+      console.warn("⚠️ Não foi possível salvar resposta (resultadoTesteId ou colaboradorId faltando).");
     }
   };
 
@@ -109,6 +123,19 @@ const TrainingPlayer = () => {
 
     // Finalizar
     setDone(true);
+
+    // Atualiza o resultado final no backend
+    if (resultadoTesteId) {
+      const score = newAnswers.filter((a) => a.isCorrect).length;
+      const pct = Math.round((score / steps.length) * 100);
+      updateResultado(resultadoTesteId, {
+        total_acertos: score,
+        total_erros: steps.length - score,
+        score: pct
+      }).catch((err) => {
+        console.error("❌ Erro ao atualizar resultado final no backend:", err);
+      });
+    }
   };
 
   if (done) {

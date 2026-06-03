@@ -65,11 +65,21 @@ export interface TrainingFromAPI {
 // ─── Payload para salvar respostas ───────────────────────────────
 
 export interface RespostaPayload {
-  colaboradorId: number;
-  cenarioId: number;
-  opcaoId: number;
-  correta: boolean;
+  acertou: boolean;
+  opcaoRespostaId: number;
+  cenarioGolpeId: number;
+  resultadoTesteId: number;
 }
+
+export interface ResultadoPayload {
+  colaboradorId: number;
+  total_acertos?: number;
+  total_erros?: number;
+  score?: number;
+  faixa_etaria?: string | null;
+  conhecimento_ti?: string | null;
+}
+
 
 // ─── Constantes ──────────────────────────────────────────────────
 
@@ -200,7 +210,88 @@ export async function getTrainingByIdFromAPI(
   return all.find((t) => t.id === id) ?? null;
 }
 
-// ─── Salvar respostas ────────────────────────────────────────────
+// ─── Salvar e buscar resultados / respostas ───────────────────────
+
+/**
+ * Cria uma nova tentativa de treinamento (resultado) no endpoint POST /resultados.
+ */
+export async function createResultado(colaboradorId: number): Promise<number> {
+  const url = `${BASE_URL}/resultados`;
+  console.log(`📤 Criando resultado em: ${url}`, { colaboradorId });
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ colaboradorId }),
+      mode: "cors",
+      credentials: "omit",
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`Erro ao criar resultado (${res.status}): ${errorBody}`);
+    }
+
+    const data = await res.json();
+    console.log("✅ Resultado criado com ID:", data.id);
+    return data.id;
+  } catch (error: any) {
+    console.error("❌ Erro ao criar resultado:", error);
+    throw error;
+  }
+}
+
+/**
+ * Atualiza o resultado final no endpoint PUT /resultados/:id.
+ */
+export async function updateResultado(
+  id: number,
+  payload: Partial<ResultadoPayload>
+): Promise<void> {
+  const url = `${BASE_URL}/resultados/${id}`;
+  console.log(`📤 Atualizando resultado ID ${id} em: ${url}`, payload);
+
+  try {
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+      mode: "cors",
+      credentials: "omit",
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(`Erro ao atualizar resultado (${res.status}): ${errorBody}`);
+    }
+
+    console.log("✅ Resultado atualizado com sucesso!");
+  } catch (error: any) {
+    console.error("❌ Erro ao atualizar resultado:", error);
+    throw error;
+  }
+}
+
+/**
+ * Busca a lista completa de resultados do endpoint GET /resultados.
+ */
+export async function fetchResultados(): Promise<any[]> {
+  return apiFetch<any[]>("/resultados");
+}
+
+/**
+ * Busca a lista completa de respostas do endpoint GET /respostas.
+ */
+export async function fetchRespostas(): Promise<any[]> {
+  return apiFetch<any[]>("/respostas");
+}
 
 /**
  * Envia a resposta do colaborador para o endpoint POST /respostas.
@@ -242,19 +333,3 @@ export async function salvarResposta(payload: RespostaPayload): Promise<void> {
   }
 }
 
-/**
- * Salva múltiplas respostas de um treinamento de uma vez.
- */
-export async function salvarRespostas(
-  colaboradorId: number,
-  respostas: { cenarioId: number; opcaoId: number; correta: boolean }[]
-): Promise<void> {
-  for (const r of respostas) {
-    await salvarResposta({
-      colaboradorId,
-      cenarioId: r.cenarioId,
-      opcaoId: r.opcaoId,
-      correta: r.correta,
-    });
-  }
-}
