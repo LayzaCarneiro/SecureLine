@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { supabase } from "@/integrations/supabase/client";
 
+import { fetchTrainingsFromAPI } from "@/services/tiposGolpe";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,7 @@ const MembersDashboard = () => {
     if (!user) return;
 
     (async () => {
+      // Busca tentativas do Supabase
       const { data: atts } =
         await supabase
           .from("training_attempts")
@@ -63,27 +66,19 @@ const MembersDashboard = () => {
         (atts as Attempt[]) ?? []
       );
 
-      if (atts && atts.length > 0) {
-        const ids = [
-          ...new Set(
-            atts.map((a) => a.training_id)
-          ),
-        ];
-
-        const { data: trainings } =
-          await supabase
-            .from("advanced_trainings")
-            .select("id, title")
-            .in("id", ids);
-
+      // Busca títulos dos treinamentos da API
+      try {
+        const apiTrainings = await fetchTrainingsFromAPI();
         setTrainingTitles(
           Object.fromEntries(
-            (trainings ?? []).map((t) => [
+            apiTrainings.map((t) => [
               t.id,
               t.title,
             ])
           )
         );
+      } catch (err) {
+        console.warn("⚠️ Não foi possível carregar títulos dos treinamentos da API:", err);
       }
 
       setLoading(false);

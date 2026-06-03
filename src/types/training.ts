@@ -13,7 +13,31 @@ export interface Training {
   id: string;
   title: string;
   description: string;
-  duration: number;
-  type: "video" | "interactive" | "quiz";
-  completedBy?: string[];
+  level: string;
+  category: string;
+  content: {
+    steps: TrainingStep[];
+  };
+}
+
+export interface TrainingStep {
+  id: string;
+  prompt: string;
+  context?: string;
+  media?: StepMedia;
+  options: StepOption[];
+}
+
+export interface StepMedia {
+  type: "image" | "audio" | "video";
+  url: string;
+  caption?: string;
+}
+
+export interface StepOption {
+  id: string;
+  label: string;
+  isCorrect: boolean;
+  feedback: string;
+  nextStepId?: string;
 }

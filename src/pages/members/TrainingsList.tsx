@@ -6,34 +6,20 @@ import { motion } from "framer-motion";
 
 import MembersLayout from "@/components/members/MembersLayout";
 
-import { supabase } from "@/integrations/supabase/client";
+import { fetchTrainingsFromAPI } from "@/services/tiposGolpe";
+import type { TrainingFromAPI } from "@/services/tiposGolpe";
 
 import { Button } from "@/components/ui/button";
 
 import {
   GraduationCap,
-  Clock,
   Sparkles,
   ArrowRight,
   Shield,
   BrainCircuit,
 } from "lucide-react";
 
-import { seedTrainings } from "@/data/advancedTrainings";
-
-import { useAuth } from "@/hooks/useAuth";
-
 import { toast } from "@/hooks/use-toast";
-
-interface Training {
-  id: string;
-  title: string;
-  description: string;
-  level: string;
-  category: string;
-  estimated_minutes: number;
-  content: any;
-}
 
 const levelStyles: Record<
   string,
@@ -72,10 +58,8 @@ const levelStyles: Record<
 };
 
 const TrainingsList = () => {
-  const { isAdmin } = useAuth();
-
   const [trainings, setTrainings] =
-    useState<Training[]>([]);
+    useState<TrainingFromAPI[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -83,37 +67,17 @@ const TrainingsList = () => {
   const load = async () => {
     setLoading(true);
 
-    const { data, error } = await supabase
-      .from("advanced_trainings")
-      .select("*")
-      .order("created_at", {
-        ascending: false,
+    try {
+      const data = await fetchTrainingsFromAPI();
+      setTrainings(data);
+    } catch (error: any) {
+      console.error("Erro ao carregar treinamentos:", error);
+      toast({
+        title: "Erro ao carregar treinamentos",
+        description: error?.message || "Não foi possível conectar à API.",
+        variant: "destructive",
       });
-
-    if (error) {
-      console.error(error);
-    }
-
-    // Se existir no banco
-    if (data && data.length > 0) {
-      setTrainings(data as Training[]);
-    } else {
-      // FALLBACK LOCAL
-      const fallbackTrainings: Training[] =
-        seedTrainings.map((t) => ({
-          id: t.id,
-          title: t.title,
-          description: t.description,
-          level: t.level,
-          category: t.category,
-          estimated_minutes:
-            t.estimatedMinutes,
-          content: {
-            steps: t.steps,
-          },
-        }));
-
-      setTrainings(fallbackTrainings);
+      setTrainings([]);
     }
 
     setLoading(false);
@@ -122,41 +86,6 @@ const TrainingsList = () => {
   useEffect(() => {
     load();
   }, []);
-
-  const seedDefaults = async () => {
-    const rows = seedTrainings.map(
-      (t) => ({
-        title: t.title,
-        description: t.description,
-        level: t.level,
-        category: t.category,
-        estimated_minutes:
-          t.estimatedMinutes,
-        content: {
-          steps: t.steps,
-        },
-      })
-    );
-
-    const { error } = await supabase
-      .from("advanced_trainings")
-      .insert(rows);
-
-    if (error) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title:
-          "Treinamentos carregados!",
-      });
-
-      load();
-    }
-  };
 
   return (
     <MembersLayout>
@@ -233,26 +162,6 @@ const TrainingsList = () => {
                 experiências modernas e
                 interativas.
               </p>
-
-              {isAdmin &&
-                trainings.length === 0 && (
-                  <Button
-                    onClick={seedDefaults}
-                    className="
-                      mt-8
-                      h-12 px-6
-                      rounded-2xl
-                      bg-gradient-to-r
-                      from-primary
-                      to-secondary
-                      shadow-[0_10px_40px_rgba(124,58,237,0.35)]
-                    "
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-
-                    Carregar treinamentos
-                  </Button>
-                )}
             </div>
 
             {/* SIDE CARD */}
@@ -360,22 +269,19 @@ const TrainingsList = () => {
                 cadastrados na plataforma.
               </p>
 
-              {isAdmin && (
-                <Button
-                  onClick={seedDefaults}
-                  className="
-                    h-12 px-6
-                    rounded-2xl
-                    bg-gradient-to-r
-                    from-primary
-                    to-secondary
-                  "
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-
-                  Carregar exemplos
-                </Button>
-              )}
+              <Button
+                onClick={load}
+                className="
+                  h-12 px-6
+                  rounded-2xl
+                  bg-gradient-to-r
+                  from-primary
+                  to-secondary
+                "
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Tentar novamente
+              </Button>
             </div>
           </div>
         ) : (
@@ -444,12 +350,8 @@ const TrainingsList = () => {
                       </span>
 
                       <div className="flex items-center gap-1 text-xs text-zinc-500">
-                        <Clock className="w-3.5 h-3.5" />
-
-                        {
-                          t.estimated_minutes
-                        }{" "}
-                        min
+                        {t.content.steps.length}{" "}
+                        {t.content.steps.length === 1 ? "cenário" : "cenários"}
                       </div>
                     </div>
 

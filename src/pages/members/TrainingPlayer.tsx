@@ -1,40 +1,59 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MembersLayout from "@/components/members/MembersLayout";
-import { supabase } from "@/integrations/supabase/client";
+import { getTrainingByIdFromAPI, salvarResposta } from "@/services/tiposGolpe";
+import type { TrainingFromAPI, TrainingStep, TrainingOption } from "@/services/tiposGolpe";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, ArrowRight, Trophy } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
-import type { TrainingStep, StepOption } from "@/data/advancedTrainings";
 
 const TrainingPlayer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [training, setTraining] = useState<any>(null);
+  const [training, setTraining] = useState<TrainingFromAPI | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [currentStepId, setCurrentStepId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<StepOption | null>(null);
+  const [selected, setSelected] = useState<TrainingOption | null>(null);
   const [answers, setAnswers] = useState<{ stepId: string; optionId: string; isCorrect: boolean }[]>([]);
   const [done, setDone] = useState(false);
-  const [saved, setSaved] = useState(false);
+
+  // Recupera o ID do colaborador logado do localStorage
+  const getColaboradorId = (): number | null => {
+    try {
+      const stored = localStorage.getItem("colaborador");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed?.id ?? null;
+      }
+    } catch {
+      // ignora erro de parsing
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const { data, error } = await supabase.from("advanced_trainings").select("*").eq("id", id).maybeSingle();
-      if (error || !data) {
-        toast({ title: "Treinamento não encontrado", variant: "destructive" });
+      try {
+        const data = await getTrainingByIdFromAPI(id);
+        if (!data) {
+          toast({ title: "Treinamento não encontrado", variant: "destructive" });
+          navigate("/members/trainings");
+          return;
+        }
+        setTraining(data);
+        setCurrentStepId(data.content?.steps?.[0]?.id ?? null);
+      } catch (error: any) {
+        toast({
+          title: "Erro ao carregar treinamento",
+          description: error?.message || "Não foi possível conectar à API.",
+          variant: "destructive",
+        });
         navigate("/members/trainings");
-        return;
       }
-      setTraining(data);
-      const c: any = data.content;
-      setCurrentStepId(c?.steps?.[0]?.id ?? null);
       setLoading(false);
     })();
   }, [id, navigate]);
@@ -47,15 +66,28 @@ const TrainingPlayer = () => {
     );
   }
 
-  const steps: TrainingStep[] = (training.content as any)?.steps ?? [];
+  const steps: TrainingStep[] = training.content?.steps ?? [];
   const currentStep = steps.find((s) => s.id === currentStepId);
 
-  const handleSelect = (opt: StepOption) => {
+  const handleSelect = (opt: TrainingOption) => {
     if (selected) return;
     setSelected(opt);
+
+    // Salva a resposta na API imediatamente
+    const colaboradorId = getColaboradorId();
+    if (colaboradorId && currentStep) {
+      salvarResposta({
+        colaboradorId,
+        cenarioId: Number(currentStep.id),
+        opcaoId: Number(opt.id),
+        correta: opt.isCorrect,
+      }).catch((err) => {
+        console.warn("⚠️ Erro ao salvar resposta (não bloqueia o fluxo):", err?.message);
+      });
+    }
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!selected || !currentStep) return;
     const newAnswers = [...answers, { stepId: currentStep.id, optionId: selected.id, isCorrect: selected.isCorrect }];
     setAnswers(newAnswers);
@@ -76,25 +108,6 @@ const TrainingPlayer = () => {
     }
 
     // Finalizar
-    const score = newAnswers.filter((a) => a.isCorrect).length;
-    const total = newAnswers.length;
-    const percentage = total > 0 ? (score / total) * 100 : 0;
-
-    if (user && !saved) {
-      const { error } = await supabase.from("training_attempts").insert({
-        user_id: user.id,
-        training_id: training.id,
-        score,
-        total,
-        percentage,
-        answers: newAnswers,
-      });
-      if (error) {
-        toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
-      } else {
-        setSaved(true);
-      }
-    }
     setDone(true);
   };
 
@@ -155,23 +168,6 @@ const TrainingPlayer = () => {
             {currentStep.context && <CardDescription>{currentStep.context}</CardDescription>}
           </CardHeader>
           <CardContent className="space-y-4">
-            {currentStep.media && (
-              <div className="rounded-lg overflow-hidden border border-border">
-                {currentStep.media.type === "image" && (
-                  <img src={currentStep.media.url} alt={currentStep.media.caption ?? ""} className="w-full" />
-                )}
-                {currentStep.media.type === "audio" && (
-                  <audio controls src={currentStep.media.url} className="w-full p-2" />
-                )}
-                {currentStep.media.type === "video" && (
-                  <video controls src={currentStep.media.url} className="w-full" />
-                )}
-                {currentStep.media.caption && (
-                  <p className="text-xs text-muted-foreground p-2 bg-muted">{currentStep.media.caption}</p>
-                )}
-              </div>
-            )}
-
             <div className="space-y-2">
               {currentStep.options.map((opt) => {
                 const isSelected = selected?.id === opt.id;
