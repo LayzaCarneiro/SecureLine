@@ -175,8 +175,95 @@ const Navbar = ({
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           {/* Company Auth Status */}
-          {company ? (
-            <div className="flex items-center gap-2">
+          {(company || !colaborador) && (
+            company ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="
+                    h-11
+                    rounded-2xl
+                    border-white/10
+                    bg-white/[0.03]
+                    hover:bg-white/[0.06]
+                    text-white
+                    backdrop-blur-xl
+                  "
+                >
+                  <Link to="/company/dashboard">
+                    <Building className="w-4 h-4 mr-2" />
+                    {company.nome}
+                  </Link>
+                </Button>
+                <Button
+                  onClick={logoutCompany}
+                  variant="outline"
+                  size="sm"
+                  className="
+                    h-11
+                    rounded-2xl
+                    border-white/10
+                    bg-white/[0.03]
+                    hover:bg-white/[0.06]
+                    text-zinc-300
+                    hover:text-white
+                  "
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="
+                  h-11
+                  rounded-2xl
+                  text-zinc-400
+                  hover:text-white
+                "
+              >
+                <Link to="/company/login">
+                  Empresas
+                </Link>
+              </Button>
+            )
+          )}
+
+          {/* Colaborador Auth Status */}
+          {(colaborador || !company) && (
+            colaborador ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-white/10 bg-white/[0.03]">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
+                    <UserCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-white">
+                    {colaborador.nome || colaborador.codigo_colaborador}
+                  </span>
+                </div>
+                
+                <Button
+                  onClick={logout}
+                  variant="outline"
+                  size="sm"
+                  className="
+                    h-11
+                    rounded-2xl
+                    border-white/10
+                    bg-white/[0.03]
+                    hover:bg-white/[0.06]
+                    text-zinc-300
+                    hover:text-white
+                  "
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
               <Button
                 asChild
                 variant="outline"
@@ -191,95 +278,12 @@ const Navbar = ({
                   backdrop-blur-xl
                 "
               >
-                <Link to="/company/dashboard">
-                  <Building className="w-4 h-4 mr-2" />
-                  {company.nome}
+                <Link to="/auth">
+                  <UserCircle className="w-4 h-4 mr-2" />
+                  Entrar
                 </Link>
               </Button>
-              <Button
-                onClick={logoutCompany}
-                variant="outline"
-                size="sm"
-                className="
-                  h-11
-                  rounded-2xl
-                  border-white/10
-                  bg-white/[0.03]
-                  hover:bg-white/[0.06]
-                  text-zinc-300
-                  hover:text-white
-                "
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="
-                h-11
-                rounded-2xl
-                text-zinc-400
-                hover:text-white
-              "
-            >
-              <Link to="/company/login">
-                Empresas
-              </Link>
-            </Button>
-          )}
-
-          {/* Colaborador Auth Status */}
-          {colaborador ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-white/10 bg-white/[0.03]">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
-                  <UserCircle className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-sm font-medium text-white">
-                  {colaborador.nome || colaborador.codigo_colaborador}
-                </span>
-              </div>
-              
-              <Button
-                onClick={logout}
-                variant="outline"
-                size="sm"
-                className="
-                  h-11
-                  rounded-2xl
-                  border-white/10
-                  bg-white/[0.03]
-                  hover:bg-white/[0.06]
-                  text-zinc-300
-                  hover:text-white
-                "
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="
-                h-11
-                rounded-2xl
-                border-white/10
-                bg-white/[0.03]
-                hover:bg-white/[0.06]
-                text-white
-                backdrop-blur-xl
-              "
-            >
-              <Link to="/auth">
-                <UserCircle className="w-4 h-4 mr-2" />
-                Entrar
-              </Link>
-            </Button>
+            )
           )}
 
           <Button
@@ -387,10 +391,57 @@ const Navbar = ({
               })}
 
               {/* Company Mobile Auth Status */}
-              {company ? (
-                <>
+              {(company || !colaborador) && (
+                company ? (
+                  <>
+                    <Link
+                      to="/company/dashboard"
+                      onClick={() => setMobileOpen(false)}
+                      className="
+                        w-full
+                        flex items-center justify-between
+                        px-4 py-4
+                        rounded-2xl
+                        bg-white/[0.03]
+                        text-sm font-medium
+                        text-zinc-300
+                        hover:bg-white/[0.06]
+                        transition-all
+                      "
+                    >
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-primary" />
+                        <span>{company.nome} (Painel)</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 opacity-60" />
+                    </Link>
+                    <button
+                      onClick={() => {
+                        logoutCompany();
+                        setMobileOpen(false);
+                      }}
+                      className="
+                        w-full
+                        flex items-center justify-between
+                        px-4 py-4
+                        rounded-2xl
+                        bg-white/[0.03]
+                        text-sm font-medium
+                        text-red-400
+                        hover:bg-white/[0.06]
+                        transition-all
+                      "
+                    >
+                      <div className="flex items-center gap-2">
+                        <LogOut className="w-4 h-4" />
+                        <span>Sair da Empresa</span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 opacity-60" />
+                    </button>
+                  </>
+                ) : (
                   <Link
-                    to="/company/dashboard"
+                    to="/company/login"
                     onClick={() => setMobileOpen(false)}
                     className="
                       w-full
@@ -405,39 +456,24 @@ const Navbar = ({
                     "
                   >
                     <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-primary" />
-                      <span>{company.nome} (Painel)</span>
+                      <Building className="w-4 h-4" />
+                      <span>Área da Empresa</span>
                     </div>
                     <ChevronRight className="w-4 h-4 opacity-60" />
                   </Link>
-                  <button
-                    onClick={() => {
-                      logoutCompany();
-                      setMobileOpen(false);
-                    }}
-                    className="
-                      w-full
-                      flex items-center justify-between
-                      px-4 py-4
-                      rounded-2xl
-                      bg-white/[0.03]
-                      text-sm font-medium
-                      text-red-400
-                      hover:bg-white/[0.06]
-                      transition-all
-                    "
-                  >
-                    <div className="flex items-center gap-2">
-                      <LogOut className="w-4 h-4" />
-                      <span>Sair da Empresa</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 opacity-60" />
-                  </button>
-                </>
-              ) : (
+                )
+              )}
+
+              {/* Colaborador Mobile Auth Status */}
+              {(colaborador || !company) && (
                 <Link
-                  to="/company/login"
-                  onClick={() => setMobileOpen(false)}
+                  to={!colaborador ? "/auth" : "#"}
+                  onClick={() => {
+                    if (colaborador) {
+                      logout();
+                    }
+                    setMobileOpen(false);
+                  }}
                   className="
                     w-full
                     flex items-center justify-between
@@ -451,44 +487,16 @@ const Navbar = ({
                   "
                 >
                   <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4" />
-                    <span>Área da Empresa</span>
+                    <UserCircle className="w-4 h-4" />
+
+                    {colaborador
+                      ? colaborador.nome || colaborador.codigo_colaborador
+                      : "Entrar como Colaborador"}
                   </div>
+
                   <ChevronRight className="w-4 h-4 opacity-60" />
                 </Link>
               )}
-
-              {/* Colaborador Mobile Auth Status */}
-              <Link
-                to={!colaborador ? "/auth" : "#"}
-                onClick={() => {
-                  if (colaborador) {
-                    logout();
-                  }
-                  setMobileOpen(false);
-                }}
-                className="
-                  w-full
-                  flex items-center justify-between
-                  px-4 py-4
-                  rounded-2xl
-                  bg-white/[0.03]
-                  text-sm font-medium
-                  text-zinc-300
-                  hover:bg-white/[0.06]
-                  transition-all
-                "
-              >
-                <div className="flex items-center gap-2">
-                  <UserCircle className="w-4 h-4" />
-
-                  {colaborador
-                    ? colaborador.nome || colaborador.codigo_colaborador
-                    : "Entrar como Colaborador"}
-                </div>
-
-                <ChevronRight className="w-4 h-4 opacity-60" />
-              </Link>
 
               <Button
                 onClick={() => {
