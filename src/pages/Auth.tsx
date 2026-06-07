@@ -189,17 +189,26 @@ const Auth = () => {
 
     setLoading(true);
     try {
+      console.log("[LOGIN] Chamando API...");
       const result = await loginAPI(loginApelido.trim(), loginSenha);
+      console.log("[LOGIN] Resposta da API:", result);
 
       if (!result.sucesso) {
+        console.log("[LOGIN] sucesso=false, exibindo erro");
         setLoginError("Apelido ou senha incorretos.");
         return;
       }
 
+      console.log("[LOGIN] Salvando colaborador no localStorage:", result.usuario);
       localStorage.setItem("colaborador", JSON.stringify(result.usuario));
-      window.dispatchEvent(new Event("colaborador-changed"));
-      navigate("/members");
+
+      const check = localStorage.getItem("colaborador");
+      console.log("[LOGIN] Verificação do localStorage:", check);
+
+      // Navegação direta — garante redirecionamento mesmo com problemas no React Router
+      window.location.href = "/members";
     } catch (err: any) {
+      console.error("[LOGIN] Erro:", err);
       const msg = err?.message || "";
       if (msg === "UNAUTHORIZED") {
         setLoginError("Apelido ou senha incorretos.");
@@ -212,6 +221,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
 
   const handleVerificarCodigo = async (e: React.FormEvent) => {
     e.preventDefault();
