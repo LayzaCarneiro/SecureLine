@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -287,17 +287,10 @@ const Auth = () => {
   };
 
   // ---------------------------------------------------------------------------
-  // Render: logged in state
+  // Render: logged in state — redireciona de forma síncrona, sem useEffect
   // ---------------------------------------------------------------------------
-  // Redireciona automaticamente para o dashboard se já estiver logado
-  useEffect(() => {
-    if (loggedColaborador) {
-      navigate("/members", { replace: true });
-    }
-  }, [loggedColaborador, navigate]);
-
   if (loggedColaborador) {
-    return null;
+    return <Navigate to="/members" replace />;
   }
 
   // ---------------------------------------------------------------------------
