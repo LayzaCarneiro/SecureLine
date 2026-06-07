@@ -233,7 +233,7 @@ const Auth = () => {
 
     const trimmed = codigoEmpresa.trim();
     if (!trimmed) {
-      setCodigoError("Informe o código da empresa.");
+      setCodigoError("Informe o código do colaborador.");
       return;
     }
 
@@ -242,7 +242,7 @@ const Auth = () => {
       const result = await verificarCodigoEmpresa(trimmed);
 
       if (!result.valido) {
-        setCodigoError("Código da empresa inválido.");
+        setCodigoError("Código do colaborador inválido.");
         return;
       }
 
@@ -552,9 +552,9 @@ const Auth = () => {
                             className="space-y-5"
                           >
                             <div>
-                              <h3 className="text-lg font-bold text-white">Verificar empresa</h3>
+                              <h3 className="text-lg font-bold text-white">Verificar colaborador</h3>
                               <p className="text-sm text-zinc-500 mt-0.5">
-                                Insira o código fornecido pela sua empresa.
+                                Insira o seu código de colaborador.
                               </p>
                             </div>
 
@@ -563,7 +563,7 @@ const Auth = () => {
                                 htmlFor="codigo-empresa"
                                 className="text-zinc-300 font-medium text-sm"
                               >
-                                Código da Empresa
+                                Código do Colaborador
                               </Label>
                               <Input
                                 id="codigo-empresa"
@@ -573,7 +573,7 @@ const Auth = () => {
                                   setCodigoEmpresa(e.target.value);
                                   setCodigoError("");
                                 }}
-                                placeholder="Ex: CODIGO123"
+                                placeholder="Ex: COLABORADOR123"
                                 disabled={loading}
                                 autoFocus
                                 className="

@@ -105,7 +105,7 @@ const CompanyLogin = () => {
                     setCodigoAcesso(e.target.value);
                     setError("");
                   }}
-                  placeholder="Ex: GESAD123"
+                  placeholder="Ex: CODIGO123"
                   disabled={loading}
                   className="
                     h-12 rounded-2xl
