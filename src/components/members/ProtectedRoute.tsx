@@ -14,7 +14,7 @@ function getColaboradorFromStorage(): boolean {
     const stored = localStorage.getItem("colaborador");
     if (!stored || stored === "null" || stored === "undefined") return false;
     const parsed = JSON.parse(stored);
-    return parsed !== null && typeof parsed === "object" && !!parsed.id;
+    return parsed !== null && typeof parsed === "object";
   } catch {
     return false;
   }
