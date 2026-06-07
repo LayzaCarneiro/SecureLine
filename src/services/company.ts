@@ -75,8 +75,11 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
     throw new Error("Empresa não encontrada.");
   }
   
+  // Destruímos colaboradores para não enviar relações aninhadas na requisição PUT
+  const { colaboradores, ...companyFields } = company;
+  
   const updatedCompany = {
-    ...company,
+    ...companyFields,
     senha: newPassword,
   };
 
