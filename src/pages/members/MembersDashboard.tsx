@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import MembersLayout from "@/components/members/MembersLayout";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useColaborador } from "@/hooks/useColaborador";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,21 +50,29 @@ const MembersDashboard = () => {
   const [loading, setLoading] =
     useState(true);
 
-  // Lê o apelido/nome do colaborador diretamente do localStorage (síncrono)
-  const getColaboradorDisplay = (): string => {
+  const { colaborador } = useColaborador();
+
+  // Lê o apelido diretamente do localStorage — cobre qualquer formato de resposta da API
+  const getApelido = (): string => {
     try {
-      const stored = localStorage.getItem("colaborador");
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return parsed?.apelido || parsed?.nome || user?.user_metadata?.full_name || "Usuário";
+      const raw = localStorage.getItem("colaborador");
+      if (raw && raw !== "null" && raw !== "undefined") {
+        const p = JSON.parse(raw);
+        // Tenta vários nomes de campo possíveis
+        return (
+          p?.apelido ||
+          p?.username ||
+          p?.nome ||
+          p?.name ||
+          p?.email?.split("@")?.[0] ||
+          ""
+        );
       }
-    } catch {
-      // ignore
-    }
-    return user?.user_metadata?.full_name || "Usuário";
+    } catch { /* ignore */ }
+    return "";
   };
 
-  const [colaboradorNome, setColaboradorNome] = useState<string>(getColaboradorDisplay);
+  const apelido = (colaborador as any)?.apelido || getApelido() || "Usuário";
 
   // Recupera o ID do colaborador logado do localStorage
   const getColaboradorId = (): number => {
@@ -239,7 +248,7 @@ const MembersDashboard = () => {
                     bg-clip-text
                   "
                 >
-                  {colaboradorNome}
+                  {apelido}
                 </span>
               </h1>
 
