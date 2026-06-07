@@ -34,7 +34,7 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
       const found = companies.find(
         (c) =>
           c.codigo_acesso.trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
-          c.senha === senha
+          (c.senha_raw ? c.senha_raw === senha : c.senha === senha)
       );
 
       if (!found) {
