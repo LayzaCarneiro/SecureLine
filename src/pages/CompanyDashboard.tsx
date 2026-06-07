@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useCompanyAuth } from "@/contexts/CompanyAuthContext";
 import { getResults, Result, CompanyColaborador } from "@/services/company";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   Loader2,
   Search,
   Building,
+  Home,
 } from "lucide-react";
 
 const CompanyDashboard = () => {
@@ -99,14 +101,26 @@ const CompanyDashboard = () => {
               <p className="text-xs text-zinc-500 uppercase tracking-wider">Painel Administrativo</p>
             </div>
           </div>
-          <Button
-            onClick={logout}
-            variant="outline"
-            className="rounded-2xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-300 hover:text-white"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-2xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-300 hover:text-white"
+            >
+              <Link to="/">
+                <Home className="w-4 h-4 mr-2" />
+                Voltar à Home
+              </Link>
+            </Button>
+            <Button
+              onClick={logout}
+              variant="outline"
+              className="rounded-2xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-300 hover:text-white"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </div>
       </header>
 
