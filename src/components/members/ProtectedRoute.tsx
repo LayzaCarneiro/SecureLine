@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useColaborador } from "@/hooks/useColaborador";
 import { Loader2 } from "lucide-react";
 
 interface Props {
@@ -9,7 +10,10 @@ interface Props {
 }
 
 const ProtectedRoute = ({ children, requireAdmin }: Props) => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { colaborador, loading: colaboradorLoading } = useColaborador();
+
+  const loading = authLoading || colaboradorLoading;
 
   if (loading) {
     return (
@@ -19,7 +23,10 @@ const ProtectedRoute = ({ children, requireAdmin }: Props) => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  // Aceita autenticação via Supabase OU via API própria (localStorage)
+  const isAuthenticated = !!user || !!colaborador;
+
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
   if (requireAdmin && !isAdmin) return <Navigate to="/members" replace />;
 
   return <>{children}</>;
