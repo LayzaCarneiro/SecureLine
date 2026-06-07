@@ -16,31 +16,30 @@ export interface Colaborador {
   resultadosTestes: any[];
 }
 
+// Lê o colaborador do localStorage de forma síncrona
+function readColaboradorFromStorage(): Colaborador | null {
+  try {
+    const stored = localStorage.getItem("colaborador");
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    return parsed ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export const useColaborador = () => {
-  const [colaborador, setColaborador] = useState<Colaborador | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Inicialização SÍNCRONA: evita qualquer race condition com ProtectedRoute
+  const [colaborador, setColaborador] = useState<Colaborador | null>(
+    readColaboradorFromStorage
+  );
 
   useEffect(() => {
-    // Recuperar dados do localStorage ao montar
-    const readFromStorage = () => {
-      const stored = localStorage.getItem("colaborador");
-      if (stored) {
-        try {
-          setColaborador(JSON.parse(stored));
-        } catch (err) {
-          console.error("Erro ao parsejar colaborador:", err);
-          setColaborador(null);
-        }
-      } else {
-        setColaborador(null);
-      }
-      setLoading(false);
+    // Atualiza o estado quando outra parte do app altera o localStorage
+    const handleChange = () => {
+      setColaborador(readColaboradorFromStorage());
     };
 
-    readFromStorage();
-
-    // Escuta evento customizado para atualizar estado na mesma aba
-    const handleChange = () => readFromStorage();
     window.addEventListener("colaborador-changed", handleChange);
 
     return () => {
@@ -56,7 +55,7 @@ export const useColaborador = () => {
 
   return {
     colaborador,
-    loading,
+    loading: false, // nunca mais há carregamento assíncrono
     logout,
     isLoggedIn: !!colaborador,
   };
