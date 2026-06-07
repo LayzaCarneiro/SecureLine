@@ -49,7 +49,21 @@ const MembersDashboard = () => {
   const [loading, setLoading] =
     useState(true);
 
-  const [colaboradorNome, setColaboradorNome] = useState<string>("usuário");
+  // Lê o apelido/nome do colaborador diretamente do localStorage (síncrono)
+  const getColaboradorDisplay = (): string => {
+    try {
+      const stored = localStorage.getItem("colaborador");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed?.apelido || parsed?.nome || user?.user_metadata?.full_name || "Usuário";
+      }
+    } catch {
+      // ignore
+    }
+    return user?.user_metadata?.full_name || "Usuário";
+  };
+
+  const [colaboradorNome, setColaboradorNome] = useState<string>(getColaboradorDisplay);
 
   // Recupera o ID do colaborador logado do localStorage
   const getColaboradorId = (): number => {
@@ -70,19 +84,6 @@ const MembersDashboard = () => {
   useEffect(() => {
     (async () => {
       try {
-        // Resolve o nome do colaborador
-        const storedColab = localStorage.getItem("colaborador");
-        if (storedColab) {
-          try {
-            const parsed = JSON.parse(storedColab);
-            setColaboradorNome(parsed?.nome || parsed?.apelido || user?.user_metadata?.full_name || "usuário");
-          } catch {
-            // ignore
-          }
-        } else if (user?.user_metadata?.full_name) {
-          setColaboradorNome(user.user_metadata.full_name);
-        }
-
         const colaboradorId = getColaboradorId();
         
         // Busca treinamentos, resultados e respostas da API em paralelo

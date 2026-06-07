@@ -64,12 +64,12 @@ const MembersLayout = ({
 
     ...(isAdmin
       ? [
-          {
-            to: "/members/admin",
-            label: "Admin",
-            icon: Users,
-          },
-        ]
+        {
+          to: "/members/admin",
+          label: "Admin",
+          icon: Users,
+        },
+      ]
       : []),
   ];
 
@@ -145,10 +145,9 @@ const MembersLayout = ({
                     px-2 py-0.5
                     rounded-full
                     font-bold
-                    ${
-                      isAdmin
-                        ? "bg-primary/20 text-primary"
-                        : "bg-emerald-500/15 text-emerald-400"
+                    ${isAdmin
+                      ? "bg-primary/20 text-primary"
+                      : "bg-emerald-500/15 text-emerald-400"
                     }
                   `}
                 >
@@ -229,10 +228,9 @@ const MembersLayout = ({
                       rounded-2xl
                       text-sm font-medium
                       transition-all duration-300
-                      ${
-                        active
-                          ? "text-black"
-                          : "text-zinc-400 hover:text-white"
+                      ${active
+                        ? "text-black"
+                        : "text-zinc-400 hover:text-white"
                       }
                     `}
                   >
