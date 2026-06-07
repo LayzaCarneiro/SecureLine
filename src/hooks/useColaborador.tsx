@@ -16,12 +16,19 @@ export interface Colaborador {
   resultadosTestes: any[];
 }
 
-// Lê o colaborador do localStorage de forma síncrona
+// Lê o colaborador do localStorage de forma síncrona e normaliza
 function readColaboradorFromStorage(): Colaborador | null {
   try {
     const stored = localStorage.getItem("colaborador");
     if (!stored) return null;
     const parsed = JSON.parse(stored);
+    if (parsed && typeof parsed === "object") {
+      const userObj = parsed.usuario || parsed;
+      return {
+        ...userObj,
+        id: userObj.id ?? userObj.colaboradorId ?? parsed.id ?? parsed.colaboradorId,
+      } as Colaborador;
+    }
     return parsed ?? null;
   } catch {
     return null;

@@ -58,13 +58,14 @@ const MembersDashboard = () => {
       const raw = localStorage.getItem("colaborador");
       if (raw && raw !== "null" && raw !== "undefined") {
         const p = JSON.parse(raw);
-        // Tenta vários nomes de campo possíveis
+        // Tenta vários nomes de campo possíveis (inclusive aninhados no usuario)
+        const userObj = p?.usuario || p;
         return (
-          p?.apelido ||
-          p?.username ||
-          p?.nome ||
-          p?.name ||
-          p?.email?.split("@")?.[0] ||
+          userObj?.apelido ||
+          userObj?.username ||
+          userObj?.nome ||
+          userObj?.name ||
+          userObj?.email?.split("@")?.[0] ||
           ""
         );
       }
@@ -80,8 +81,11 @@ const MembersDashboard = () => {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed.id === 'number') {
-          return parsed.id;
+        const userObj = parsed?.usuario || parsed;
+        const id = userObj?.id ?? userObj?.colaboradorId;
+        if (id !== undefined && id !== null) {
+          const num = Number(id);
+          if (!isNaN(num)) return num;
         }
       }
     } catch {
@@ -118,7 +122,7 @@ const MembersDashboard = () => {
 
         // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
         const myResultados = apiResultados.filter(
-          (r) => r.colaboradorId === colaboradorId && r.total_acertos !== null
+          (r) => Number(r.colaboradorId) === Number(colaboradorId) && r.total_acertos !== null
         );
 
         // Mapeia os resultados da API para o formato Attempt esperado no dashboard

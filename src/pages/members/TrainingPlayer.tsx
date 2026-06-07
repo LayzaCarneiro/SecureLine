@@ -27,8 +27,11 @@ const TrainingPlayer = () => {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed.id === 'number') {
-          return parsed.id;
+        const userObj = parsed?.usuario || parsed;
+        const id = userObj?.id ?? userObj?.colaboradorId;
+        if (id !== undefined && id !== null) {
+          const num = Number(id);
+          if (!isNaN(num)) return num;
         }
       }
     } catch {
