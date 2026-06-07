@@ -64,3 +64,22 @@ export async function getResults(): Promise<Result[]> {
   const response = await axios.get<Result[]>(`${API_BASE}/resultados`);
   return response.data;
 }
+
+/**
+ * Atualiza a senha de uma empresa específica.
+ */
+export async function updateCompanyPassword(id: number, newPassword: string): Promise<Company> {
+  const responseCompanies = await axios.get<Company[]>(`${API_BASE}/empresas`);
+  const company = responseCompanies.data.find((c) => c.id === id);
+  if (!company) {
+    throw new Error("Empresa não encontrada.");
+  }
+  
+  const updatedCompany = {
+    ...company,
+    senha: newPassword,
+  };
+
+  const response = await axios.put<Company>(`${API_BASE}/empresas/${id}`, updatedCompany);
+  return response.data;
+}
