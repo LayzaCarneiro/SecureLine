@@ -191,21 +191,24 @@ const Auth = () => {
     try {
       console.log("[LOGIN] Chamando API...");
       const result = await loginAPI(loginApelido.trim(), loginSenha);
-      console.log("[LOGIN] Resposta da API:", result);
+      console.log("[LOGIN] Resposta da API:", JSON.stringify(result));
 
       if (!result.sucesso) {
-        console.log("[LOGIN] sucesso=false, exibindo erro");
         setLoginError("Apelido ou senha incorretos.");
         return;
       }
 
-      console.log("[LOGIN] Salvando colaborador no localStorage:", result.usuario);
-      localStorage.setItem("colaborador", JSON.stringify(result.usuario));
+      // A API pode retornar { sucesso, usuario: {...} } ou flat { sucesso, id, nome, ... }
+      // Salvamos o que vier, garantindo que sempre seja um objeto válido
+      const userData =
+        result.usuario && typeof result.usuario === "object"
+          ? result.usuario
+          : result;
 
-      const check = localStorage.getItem("colaborador");
-      console.log("[LOGIN] Verificação do localStorage:", check);
+      console.log("[LOGIN] Salvando no localStorage:", JSON.stringify(userData));
+      localStorage.setItem("colaborador", JSON.stringify(userData));
 
-      // Navegação direta — garante redirecionamento mesmo com problemas no React Router
+      // Navegação direta para /members
       window.location.href = "/members";
     } catch (err: any) {
       console.error("[LOGIN] Erro:", err);
@@ -221,6 +224,7 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
 
 
   const handleVerificarCodigo = async (e: React.FormEvent) => {
