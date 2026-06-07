@@ -31,10 +31,18 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       const companies = await getCompanies();
+
+      // Gera hash SHA-256 da senha digitada
+      const msgBuffer = new TextEncoder().encode(senha);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashHex = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
       const found = companies.find(
         (c) =>
           c.codigo_acesso.trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
-          (c.senha_raw ? c.senha_raw === senha : c.senha === senha)
+          (c.email_admin ? c.email_admin === hashHex : c.senha === senha)
       );
 
       if (!found) {

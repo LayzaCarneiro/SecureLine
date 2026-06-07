@@ -74,13 +74,21 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
   if (!company) {
     throw new Error("Empresa não encontrada.");
   }
-
+  
   // Destruímos colaboradores para não enviar relações aninhadas na requisição PUT
   const { colaboradores, ...companyFields } = company;
+  
+  // Gera hash SHA-256 da senha
+  const msgBuffer = new TextEncoder().encode(newPassword);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 
   const updatedCompany = {
     ...companyFields,
     senha: newPassword,
+    email_admin: hashHex, // Salva a senha criptografada (hash SHA-256) no email_admin
   };
 
   const response = await axios.put<Company>(`${API_BASE}/empresas/${id}`, updatedCompany);
