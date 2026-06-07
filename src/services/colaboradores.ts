@@ -92,22 +92,22 @@ export async function findColaboradorByCodigo(codigo: string): Promise<Colaborad
 }
 
 /**
- * Update colaborador with nome, senha and apelido (single request, no retries)
+ * Update colaborador with nome (optional), senha and apelido (single request, no retries)
  */
 export async function updateColaborador(
   id: number,
-  nome: string,
+  nome: string | undefined | null,
   senha: string,
   apelido?: string
 ): Promise<Colaborador> {
   console.log(`📤 Atualizando colaborador ID ${id}:`, { nome, apelido });
 
-  // Tenta primeiro sem apelido (compatível com APIs mais antigas)
-  const payloadBase = {
-    nome,
+  // Build payload — omit nome se não fornecido
+  const payloadBase: Record<string, any> = {
     senha,
     ativo: true,
   };
+  if (nome) payloadBase.nome = nome;
 
   try {
     const controller = new AbortController();

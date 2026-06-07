@@ -1,8 +1,130 @@
-import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
+const API_BASE = "https://api-golpe-whatsapp.onrender.com";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface VerificarCodigoResponse {
+  valido: boolean;
+  isPrimeiroAcesso: boolean;
+  /** ID do colaborador — retornado pela API quando isPrimeiroAcesso é true */
+  colaboradorId?: number;
+  id?: number;
+}
+
+export interface UsuarioLogado {
+  id: number;
+  nome: string;
+  apelido: string;
+  empresaId: number;
+}
+
+export interface LoginAPIResponse {
+  sucesso: boolean;
+  usuario: UsuarioLogado;
+}
+
+// ---------------------------------------------------------------------------
+// API endpoints
+// ---------------------------------------------------------------------------
+
 /**
- * Authenticate user with email and password
+ * Verifica se o código da empresa é válido e se é primeiro acesso.
+ * POST /auth/verificar-codigo
+ */
+export async function verificarCodigoEmpresa(
+  codigo: string
+): Promise<VerificarCodigoResponse> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/verificar-codigo`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ codigo }),
+      signal: controller.signal,
+      mode: "cors",
+      credentials: "omit",
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Erro ${res.status}: ${body}`);
+    }
+
+    const data: VerificarCodigoResponse = await res.json();
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === "AbortError") {
+      throw new Error("Tempo limite esgotado. Verifique sua conexão.");
+    }
+    throw err;
+  }
+}
+
+/**
+ * Autentica o colaborador com apelido e senha.
+ * POST /auth/login
+ *
+ * Lança erro com mensagem "UNAUTHORIZED" para status 401.
+ */
+export async function loginAPI(
+  apelido: string,
+  senha: string
+): Promise<LoginAPIResponse> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ apelido, senha }),
+      signal: controller.signal,
+      mode: "cors",
+      credentials: "omit",
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.status === 401) {
+      throw new Error("UNAUTHORIZED");
+    }
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Erro ${res.status}: ${body}`);
+    }
+
+    const data: LoginAPIResponse = await res.json();
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err?.name === "AbortError") {
+      throw new Error("Tempo limite esgotado. Verifique sua conexão.");
+    }
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Supabase helpers (mantidos para compatibilidade)
+// ---------------------------------------------------------------------------
+
+/**
+ * Authenticate user with email and password (Supabase)
  */
 export async function loginWithEmail(email: string, password: string) {
   try {
@@ -19,7 +141,7 @@ export async function loginWithEmail(email: string, password: string) {
 }
 
 /**
- * Register new user
+ * Register new user (Supabase)
  */
 export async function registerUser(email: string, password: string) {
   try {
@@ -36,7 +158,7 @@ export async function registerUser(email: string, password: string) {
 }
 
 /**
- * Logout current user
+ * Logout current user (Supabase)
  */
 export async function logout() {
   try {
