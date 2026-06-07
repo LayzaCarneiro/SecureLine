@@ -170,18 +170,23 @@ const MembersLayout = ({
 
             <Button
               variant="ghost"
-              size="icon"
               onClick={handleSignOut}
               className="
+                flex items-center gap-2
+                px-4 h-10
                 rounded-2xl
                 border border-white/10
                 bg-white/[0.03]
-                hover:bg-white/[0.06]
-                text-zinc-300
-                hover:text-white
+                hover:bg-red-500/10
+                hover:border-red-500/30
+                text-zinc-400
+                hover:text-red-400
+                transition-all duration-200
+                text-sm font-medium
               "
             >
               <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>

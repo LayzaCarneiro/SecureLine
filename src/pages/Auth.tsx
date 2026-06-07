@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -13,7 +13,6 @@ import {
   ArrowRight,
   LockKeyhole,
   CheckCircle2,
-  LogOut,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -290,58 +289,15 @@ const Auth = () => {
   // ---------------------------------------------------------------------------
   // Render: logged in state
   // ---------------------------------------------------------------------------
-  if (loggedColaborador) {
-    return (
-      <div className="relative min-h-screen overflow-hidden bg-[#060816] text-white flex items-center justify-center px-4 py-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.20),transparent_35%)]" />
-        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
-        <div className="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full bg-primary/20 blur-[120px]" />
+  // Redireciona automaticamente para o dashboard se já estiver logado
+  useEffect(() => {
+    if (loggedColaborador) {
+      navigate("/members", { replace: true });
+    }
+  }, [loggedColaborador, navigate]);
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="relative z-10 w-full max-w-md"
-        >
-          <Card className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(124,58,237,0.18),transparent_35%)]" />
-            <CardContent className="relative z-10 p-10 flex flex-col items-center gap-6">
-              <div className="relative">
-                <div className="absolute inset-0 bg-green-400/20 rounded-full blur-xl" />
-                <div className="relative bg-green-500/10 border border-green-500/20 rounded-full p-5">
-                  <CheckCircle2 className="w-10 h-10 text-green-400" />
-                </div>
-              </div>
-              <div className="text-center space-y-1">
-                <p className="text-xl font-bold text-white">Você está conectado</p>
-                <p className="text-base text-primary font-semibold">
-                  {(loggedColaborador as any).nome ||
-                    (loggedColaborador as any).apelido ||
-                    "Colaborador"}
-                </p>
-              </div>
-              <div className="w-full flex flex-col gap-3">
-                <Button
-                  onClick={() => navigate("/members")}
-                  className="w-full h-12 rounded-2xl font-semibold bg-gradient-to-r from-primary to-secondary shadow-[0_10px_40px_rgba(124,58,237,0.35)]"
-                >
-                  Ir para o painel
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-                <Button
-                  onClick={logout}
-                  variant="outline"
-                  className="w-full h-12 rounded-2xl border-white/10 hover:bg-white/[0.04]"
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair da conta
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
+  if (loggedColaborador) {
+    return null;
   }
 
   // ---------------------------------------------------------------------------
