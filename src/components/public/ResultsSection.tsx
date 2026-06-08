@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { fetchResultados } from "@/services/tiposGolpe";
 
 import {
   Shield,
@@ -74,6 +76,45 @@ const ResultsSection = ({
   const level = getLevel(pct);
 
   const LevelIcon = level.icon;
+
+  const [allResults, setAllResults] = useState<any[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await fetchResultados();
+        const validData = data.filter((r) => r.score !== null && r.score !== undefined);
+        setAllResults(validData);
+      } catch (err) {
+        console.error("Erro ao buscar estatísticas gerais:", err);
+      } finally {
+        setLoadingStats(false);
+      }
+    })();
+  }, []);
+
+  const avgOverallScore = allResults.length
+    ? Math.round(allResults.reduce((sum, r) => sum + Number(r.score || 0), 0) / allResults.length)
+    : 0;
+
+  const faixas = ["Até 20 anos", "21 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Mais de 60 anos"];
+  const faixaStats = faixas.map((f) => {
+    const list = allResults.filter((r) => r.faixa_etaria === f);
+    const count = list.length;
+    const pctShare = allResults.length ? Math.round((count / allResults.length) * 100) : 0;
+    const avgScore = count ? Math.round(list.reduce((sum, r) => sum + Number(r.score || 0), 0) / count) : 0;
+    return { name: f, count, pct: pctShare, avgScore };
+  });
+
+  const expertises = ["Iniciante", "Básico", "Intermediário", "Avançado", "Especialista / TI"];
+  const expertiseStats = expertises.map((e) => {
+    const list = allResults.filter((r) => r.conhecimento_ti === e);
+    const count = list.length;
+    const pctShare = allResults.length ? Math.round((count / allResults.length) * 100) : 0;
+    const avgScore = count ? Math.round(list.reduce((sum, r) => sum + Number(r.score || 0), 0) / count) : 0;
+    return { name: e, count, pct: pctShare, avgScore };
+  });
 
   return (
     <section className="relative py-24 overflow-hidden bg-[#060816] text-white">
@@ -398,6 +439,81 @@ const ResultsSection = ({
             </div>
           </motion.div>
         )}
+
+        {/* STATS SECTION */}
+        <div className="mb-14 rounded-[32px] border border-white/[0.08] bg-white/[0.02] backdrop-blur-xl p-8 shadow-2xl space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-secondary" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold">Desempenho da Comunidade</h3>
+              <p className="text-sm text-zinc-500">
+                Veja as médias e estatísticas de todas as pessoas que já responderam.
+              </p>
+            </div>
+          </div>
+
+          {loadingStats ? (
+            <p className="text-zinc-500 text-sm animate-pulse">Carregando estatísticas globais...</p>
+          ) : (
+            <div className="space-y-6">
+              {/* Resumo rápido */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 text-center">
+                  <p className="text-2xl font-black text-white">{allResults.length}</p>
+                  <p className="text-xs text-zinc-500 mt-1">Total de Participantes</p>
+                </div>
+                <div className="rounded-2xl bg-white/[0.03] border border-white/5 p-4 text-center">
+                  <p className="text-2xl font-black text-secondary">{avgOverallScore}%</p>
+                  <p className="text-xs text-zinc-500 mt-1">Média de Acertos Geral</p>
+                </div>
+              </div>
+
+              {/* Faixa Etária Stats */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-zinc-300">Desempenho por Faixa Etária</h4>
+                <div className="space-y-2">
+                  {faixaStats.map((item) => (
+                    <div key={item.name} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-zinc-400">
+                        <span>{item.name} ({item.pct}%)</span>
+                        <span className="font-semibold text-white">Média: {item.count > 0 ? `${item.avgScore}%` : "Sem dados"}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-secondary transition-all"
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nível de Tecnologia Stats */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-zinc-300">Desempenho por Nível de Familiaridade</h4>
+                <div className="space-y-2">
+                  {expertiseStats.map((item) => (
+                    <div key={item.name} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs text-zinc-400">
+                        <span>{item.name} ({item.pct}%)</span>
+                        <span className="font-semibold text-white">Média: {item.count > 0 ? `${item.avgScore}%` : "Sem dados"}</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-secondary transition-all"
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ACTIONS */}
         <div className="grid sm:grid-cols-2 gap-4">

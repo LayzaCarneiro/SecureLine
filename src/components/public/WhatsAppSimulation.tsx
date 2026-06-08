@@ -267,9 +267,11 @@ const WhatsAppSimulation = ({
                 </label>
                 <div className="grid grid-cols-1 gap-2">
                   {[
-                    { val: "Até 30 anos", label: "Até 30 anos (Jovem)" },
-                    { val: "31 a 50 anos", label: "31 a 50 anos (Adulto)" },
-                    { val: "Mais de 50 anos", label: "Mais de 50 anos (Sênior)" }
+                    { val: "Até 20 anos", label: "Até 20 anos" },
+                    { val: "21 a 30 anos", label: "21 a 30 anos" },
+                    { val: "31 a 45 anos", label: "31 a 45 anos" },
+                    { val: "46 a 60 anos", label: "46 a 60 anos" },
+                    { val: "Mais de 60 anos", label: "Mais de 60 anos" }
                   ].map((opt) => (
                     <button
                       key={opt.val}
@@ -296,9 +298,11 @@ const WhatsAppSimulation = ({
                 </label>
                 <div className="grid grid-cols-1 gap-2">
                   {[
-                    { val: "Básico", label: "Básico (Redes sociais e mensagens)" },
-                    { val: "Intermediário", label: "Intermediário (Navegação diária e compras)" },
-                    { val: "Avançado", label: "Avançado (Trabalho com tecnologia / TI)" }
+                    { val: "Iniciante", label: "Iniciante (Pouco uso ou precisa de ajuda)" },
+                    { val: "Básico", label: "Básico (Navegação simples, redes sociais)" },
+                    { val: "Intermediário", label: "Intermediário (Uso diário, bancos e compras)" },
+                    { val: "Avançado", label: "Avançado (Boa desenvoltura técnica)" },
+                    { val: "Especialista / TI", label: "Especialista / TI (Profissional da área)" }
                   ].map((opt) => (
                     <button
                       key={opt.val}
