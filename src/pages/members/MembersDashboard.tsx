@@ -64,17 +64,20 @@ const MembersDashboard = () => {
     // Lê diretamente do localStorage para não depender do timing do hook
     try {
       const stored = localStorage.getItem("colaborador");
-      console.log("🔍 localStorage colaborador raw:", stored?.slice(0, 200));
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Tenta todas as estruturas possíveis
-        const userObj = parsed?.usuario || parsed;
+        // Estrutura da API: {sucesso, colaborador: {id, ...}}
+        // Também tenta: {usuario: {id}}, {id} direto
+        const userObj =
+          parsed?.colaborador ||
+          parsed?.usuario ||
+          parsed;
         const id =
           userObj?.id ??
           userObj?.colaboradorId ??
           parsed?.id ??
           parsed?.colaboradorId;
-        console.log("🆔 ID encontrado no localStorage:", id, "| userObj:", userObj);
+        console.log("🔍 localStorage parsed:", parsed, "| userObj:", userObj, "| id:", id);
         if (id !== undefined && id !== null) {
           const num = Number(id);
           if (!isNaN(num) && num > 0) return num;

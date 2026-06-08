@@ -23,7 +23,8 @@ function readColaboradorFromStorage(): Colaborador | null {
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed && typeof parsed === "object") {
-      const userObj = parsed.usuario || parsed;
+      // Suporta: {colaborador: {...}}, {usuario: {...}} ou o objeto direto
+      const userObj = parsed.colaborador || parsed.usuario || parsed;
       return {
         ...userObj,
         id: userObj.id ?? userObj.colaboradorId ?? parsed.id ?? parsed.colaboradorId,
