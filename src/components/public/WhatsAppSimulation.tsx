@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { createResultado, updateResultado } from "@/services/tiposGolpe";
 
 import scenarios, {
   QuizScenario,
@@ -65,6 +66,86 @@ const WhatsAppSimulation = ({
   onComplete,
 }: SimulationProps) => {
   const [currentScenario, setCurrentScenario] = useState(0);
+  const [showSurvey, setShowSurvey] = useState(false);
+  const [faixaEtaria, setFaixaEtaria] = useState("");
+  const [conhecimentoTi, setConhecimentoTi] = useState("");
+  const [submittingSurvey, setSubmittingSurvey] = useState(false);
+
+  const getColaboradorId = (): number | null => {
+    try {
+      const stored = localStorage.getItem("colaborador");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const userObj = parsed?.colaborador || parsed?.usuario || parsed;
+        const id = userObj?.id ?? userObj?.colaboradorId ?? parsed?.id ?? parsed?.colaboradorId;
+        if (id !== undefined && id !== null) {
+          const num = Number(id);
+          if (!isNaN(num) && num > 0) return num;
+        }
+      }
+    } catch {
+      // ignora
+    }
+    return null;
+  };
+
+  const handleSurveySubmit = async () => {
+    if (!faixaEtaria || !conhecimentoTi) return;
+    setSubmittingSurvey(true);
+
+    const score = answers.filter((a) => a.selectedOption.isCorrect).length;
+    const total = scenarios.length;
+
+    try {
+      let colabId = getColaboradorId();
+      if (!colabId) {
+        // Cria colaborador visitante sob a empresa ID 2 (Usuários Avulsos)
+        const randomCode = `AVULSO-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        const colabRes = await fetch("https://api-golpe-whatsapp.onrender.com/colaboradores", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            nome: "Visitante Avulso",
+            codigo_colaborador: randomCode,
+            empresaId: 2,
+            setor: "Geral",
+            ativo: true,
+            triked: false
+          })
+        });
+
+        if (!colabRes.ok) {
+          throw new Error("Erro ao registrar visitante na API");
+        }
+        const createdColab = await colabRes.json();
+        colabId = createdColab.id;
+      }
+
+      if (colabId) {
+        // Cria a sessão de resultado para o colaborador
+        const rId = await createResultado(colabId);
+
+        // Atualiza com o resultado final e os dados demográficos
+        const pct = Math.round((score / total) * 100);
+        await updateResultado(rId, {
+          total_acertos: score,
+          total_erros: total - score,
+          score: pct,
+          faixa_etaria: faixaEtaria,
+          conhecimento_ti: conhecimentoTi
+        });
+        console.log("✅ Resultados salvos com sucesso!");
+      }
+    } catch (err) {
+      console.error("⚠️ Erro ao registrar dados de simulação:", err);
+    } finally {
+      setSubmittingSurvey(false);
+      onComplete(score, total, answers);
+    }
+  };
 
   const [visibleMessages, setVisibleMessages] =
     useState(0);
@@ -149,19 +230,114 @@ const WhatsAppSimulation = ({
 
   const handleNext = () => {
     if (currentScenario + 1 >= scenarios.length) {
-      const score = answers.filter(
-        (a) => a.selectedOption.isCorrect
-      ).length;
-
-      onComplete(
-        score,
-        scenarios.length,
-        answers
-      );
+      setShowSurvey(true);
     } else {
       setCurrentScenario((prev) => prev + 1);
     }
   };
+
+  if (showSurvey) {
+    return (
+      <section className="relative py-20 overflow-hidden bg-[#060816] min-h-[80vh] flex items-center justify-center">
+        {/* Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(124,58,237,0.15),transparent_35%)]" />
+        {/* Grid */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
+
+        <div className="container relative z-10 mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto rounded-[32px] border border-white/10 bg-[#0B1020] p-8 shadow-[0_24px_80px_rgba(0,0,0,0.5)] space-y-6"
+          >
+            <div className="text-center">
+              <h2 className="text-3xl font-black text-white mb-2 bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                Simulação Concluída!
+              </h2>
+              <p className="text-zinc-400 text-sm">
+                Antes de ver seu resultado detalhado, nos conte um pouco sobre você (respostas anônimas).
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Faixa Etária */}
+              <div className="space-y-2">
+                <label className="text-zinc-300 font-medium text-sm">
+                  Qual a sua faixa etária?
+                </label>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { val: "Até 30 anos", label: "Até 30 anos (Jovem)" },
+                    { val: "31 a 50 anos", label: "31 a 50 anos (Adulto)" },
+                    { val: "Mais de 50 anos", label: "Mais de 50 anos (Sênior)" }
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => setFaixaEtaria(opt.val)}
+                      className={`
+                        w-full px-4 py-3.5 rounded-xl border text-left text-sm font-medium transition-all
+                        ${faixaEtaria === opt.val
+                          ? "bg-primary/20 border-primary text-white shadow-[0_0_15px_rgba(124,58,237,0.25)]"
+                          : "bg-white/[0.03] border-white/5 text-zinc-300 hover:border-white/10 hover:bg-white/[0.05]"
+                        }
+                      `}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nível de Expertise */}
+              <div className="space-y-2">
+                <label className="text-zinc-300 font-medium text-sm">
+                  Qual o seu nível de familiaridade/expertise com a internet?
+                </label>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { val: "Básico", label: "Básico (Redes sociais e mensagens)" },
+                    { val: "Intermediário", label: "Intermediário (Navegação diária e compras)" },
+                    { val: "Avançado", label: "Avançado (Trabalho com tecnologia / TI)" }
+                  ].map((opt) => (
+                    <button
+                      key={opt.val}
+                      type="button"
+                      onClick={() => setConhecimentoTi(opt.val)}
+                      className={`
+                        w-full px-4 py-3.5 rounded-xl border text-left text-sm font-medium transition-all
+                        ${conhecimentoTi === opt.val
+                          ? "bg-primary/20 border-primary text-white shadow-[0_0_15px_rgba(124,58,237,0.25)]"
+                          : "bg-white/[0.03] border-white/5 text-zinc-300 hover:border-white/10 hover:bg-white/[0.05]"
+                        }
+                      `}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSurveySubmit}
+              disabled={submittingSurvey || !faixaEtaria || !conhecimentoTi}
+              className="
+                w-full h-12 rounded-2xl font-semibold text-base
+                bg-gradient-to-r from-primary to-secondary
+                shadow-[0_8px_32px_rgba(124,58,237,0.35)]
+                hover:shadow-[0_8px_40px_rgba(124,58,237,0.5)]
+                transition-all duration-300
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+            >
+              {submittingSurvey ? "Salvando..." : "Ver Resultados"}
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section
