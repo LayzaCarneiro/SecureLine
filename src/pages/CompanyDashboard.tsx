@@ -103,20 +103,45 @@ const CompanyDashboard = () => {
       {/* Header */}
       <header className="relative z-50 border-b border-white/10 bg-[#060816]/80 backdrop-blur-2xl sticky top-0">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-primary to-secondary flex items-center justify-center">
-              <Building className="w-5 h-5 text-white" />
+          <Link
+            to="/company/dashboard"
+            className="
+              group
+              flex items-center gap-3
+            "
+          >
+            <div
+              className="
+                relative
+                w-11 h-11
+                flex items-center justify-center
+                transition-transform duration-300
+                group-hover:scale-105
+              "
+            >
+              <img
+                src="/images/logo.svg"
+                alt="SecureLine"
+                className="w-12 h-12"
+              />
             </div>
+
             <div>
-              <h1 className="text-lg font-black tracking-tight text-white leading-tight">{company.nome}</h1>
+              <h1 className="text-lg font-black tracking-tight text-white leading-none">
+                SecureLine
+              </h1>
+
               <div className="flex items-center gap-2">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Corporate Area</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  Corporate Area
+                </p>
+
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/20 text-primary">
                   EMPRESA
                 </span>
               </div>
             </div>
-          </div>
+          </Link>
           <div className="flex items-center gap-3">
             <Button
               asChild
