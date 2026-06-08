@@ -114,7 +114,7 @@ const CompanyLogin = () => {
     try {
       const companies = await getCompanies();
       const found = companies.find(
-        (c) => c.codigo_acesso.trim().toUpperCase() === trimmed.toUpperCase()
+        (c) => (c.codigo_acesso || "").trim().toUpperCase() === trimmed.toUpperCase()
       );
 
       if (!found) {

@@ -31,30 +31,30 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     try {
       // 1. Tenta autenticação via rota de API centralizada (igual aos colaboradores)
-      const res = await fetch("https://api-golpe-whatsapp.onrender.com/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ apelido: codigoAcesso.trim(), senha }),
-      });
+      try {
+        const res = await fetch("https://api-golpe-whatsapp.onrender.com/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ apelido: codigoAcesso.trim(), senha }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.sucesso) {
-          const companyData = data.colaborador || data.usuario || data.empresa || data;
-          setCompany(companyData);
-          localStorage.setItem("empresa", JSON.stringify(companyData));
-          return;
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sucesso) {
+            const companyData = data.colaborador || data.usuario || data.empresa || data;
+            setCompany(companyData);
+            localStorage.setItem("empresa", JSON.stringify(companyData));
+            return;
+          }
         }
+      } catch (apiErr) {
+        console.warn("⚠️ Falha na autenticação via endpoint /auth/login:", apiErr);
       }
-    } catch (apiErr) {
-      console.warn("⚠️ Falha na autenticação via endpoint /auth/login:", apiErr);
-    }
 
-    // 2. Fallback: Validação local (cliente) buscando nas empresas cadastradas
-    try {
+      // 2. Fallback: Validação local (cliente) buscando nas empresas cadastradas
       const companies = await getCompanies();
 
       // Gera hash SHA-256 caso a senha no banco esteja salva criptografada (padrão antigo)
@@ -66,7 +66,7 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
 
       const found = companies.find(
         (c) =>
-          c.codigo_acesso.trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
+          (c.codigo_acesso || "").trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
           (
             // Comparação de texto plano (novo padrão, idêntico aos colaboradores)
             c.senha === senha ||
