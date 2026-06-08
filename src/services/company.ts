@@ -67,6 +67,7 @@ export async function getResults(): Promise<Result[]> {
 
 /**
  * Atualiza a senha de uma empresa específica.
+ * Salva o hash SHA-256 diretamente no campo `senha` da API.
  */
 export async function updateCompanyPassword(id: number, newPassword: string): Promise<Company> {
   const responseCompanies = await axios.get<Company[]>(`${API_BASE}/empresas`);
@@ -74,11 +75,11 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
   if (!company) {
     throw new Error("Empresa não encontrada.");
   }
-  
-  // Destruímos colaboradores para não enviar relações aninhadas na requisição PUT
+
+  // Remove relações aninhadas para não enviar no PUT
   const { colaboradores, ...companyFields } = company;
-  
-  // Gera hash SHA-256 da senha
+
+  // Gera hash SHA-256 da senha digitada
   const msgBuffer = new TextEncoder().encode(newPassword);
   const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
   const hashHex = Array.from(new Uint8Array(hashBuffer))
@@ -87,8 +88,7 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
 
   const updatedCompany = {
     ...companyFields,
-    senha: newPassword,
-    email_admin: hashHex, // Salva a senha criptografada (hash SHA-256) no email_admin
+    senha: hashHex, // Salva o hash SHA-256 no campo senha (não no email_admin)
   };
 
   const response = await axios.put<Company>(`${API_BASE}/empresas/${id}`, updatedCompany);

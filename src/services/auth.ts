@@ -23,7 +23,9 @@ export interface UsuarioLogado {
 
 export interface LoginAPIResponse {
   sucesso: boolean;
-  usuario: UsuarioLogado;
+  colaborador: UsuarioLogado;
+  /** Alias legado — algumas versões da API retornam como usuario */
+  usuario?: UsuarioLogado;
 }
 
 // ---------------------------------------------------------------------------

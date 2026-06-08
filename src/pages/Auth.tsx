@@ -198,15 +198,11 @@ const Auth = () => {
         return;
       }
 
-      // A API pode retornar { sucesso, usuario: {...} } ou flat { sucesso, id, nome, ... }
-      // Salvamos o que vier, garantindo que sempre seja um objeto válido
-      const userData =
-        result.usuario && typeof result.usuario === "object"
-          ? result.usuario
-          : result;
-
-      console.log("[LOGIN] Salvando no localStorage:", JSON.stringify(userData));
-      localStorage.setItem("colaborador", JSON.stringify(userData));
+      // A API retorna { sucesso: true, colaborador: { id, nome, apelido, ... } }
+      // Salvamos a resposta completa — o hook useColaborador lê parsed.colaborador
+      console.log("[LOGIN] Salvando no localStorage:", JSON.stringify(result));
+      localStorage.setItem("colaborador", JSON.stringify(result));
+      window.dispatchEvent(new Event("colaborador-changed"));
 
       // Navegação direta para /members
       window.location.href = "/members";

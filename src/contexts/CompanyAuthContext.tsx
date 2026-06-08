@@ -42,7 +42,9 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
       const found = companies.find(
         (c) =>
           c.codigo_acesso.trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
-          (c.email_admin ? c.email_admin === hashHex : c.senha === senha)
+          // Compara hash SHA-256 com o campo senha (novo padrão)
+          // Fallback: compara com email_admin (contas criadas antes da migração)
+          (c.senha === hashHex || c.email_admin === hashHex)
       );
 
       if (!found) {
