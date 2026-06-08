@@ -59,37 +59,45 @@ const MembersDashboard = () => {
     (colaborador as any)?.username ||
     "Usuário";
 
-  // ID do colaborador: fonte primária é o hook, sem fallback hardcoded
+  // ID do colaborador: lê de todas as fontes possíveis
   const getColaboradorId = (): number | null => {
-    // Prioridade 1: hook useColaborador (mais confiável)
-    if (colaborador?.id) {
-      const num = Number(colaborador.id);
-      if (!isNaN(num) && num > 0) return num;
-    }
-    // Prioridade 2: localStorage como backup
+    // Lê diretamente do localStorage para não depender do timing do hook
     try {
       const stored = localStorage.getItem("colaborador");
+      console.log("🔍 localStorage colaborador raw:", stored?.slice(0, 200));
       if (stored) {
         const parsed = JSON.parse(stored);
+        // Tenta todas as estruturas possíveis
         const userObj = parsed?.usuario || parsed;
-        const id = userObj?.id ?? userObj?.colaboradorId;
+        const id =
+          userObj?.id ??
+          userObj?.colaboradorId ??
+          parsed?.id ??
+          parsed?.colaboradorId;
+        console.log("🆔 ID encontrado no localStorage:", id, "| userObj:", userObj);
         if (id !== undefined && id !== null) {
           const num = Number(id);
           if (!isNaN(num) && num > 0) return num;
         }
       }
-    } catch {
-      // ignora
+    } catch (e) {
+      console.error("❌ Erro ao ler localStorage:", e);
     }
-    return null; // Sem fallback — sem ID, sem dados
+    // Fallback: hook useColaborador
+    if (colaborador?.id) {
+      const num = Number(colaborador.id);
+      if (!isNaN(num) && num > 0) return num;
+    }
+    return null;
   };
 
   useEffect(() => {
     (async () => {
       try {
         const colaboradorId = getColaboradorId();
+        console.log("📊 Dashboard carregando para colaboradorId:", colaboradorId);
 
-        // Sem ID definido, não carrega dados (evita misturar dados entre contas)
+        // Sem ID definido, não carrega dados
         if (colaboradorId === null) {
           console.warn("⚠️ Colaborador não identificado — dashboard vazio.");
           setAttempts([]);
