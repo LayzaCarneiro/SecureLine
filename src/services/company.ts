@@ -79,16 +79,11 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
   // Remove relações aninhadas para não enviar no PUT
   const { colaboradores, ...companyFields } = company;
 
-  // Gera hash SHA-256 da senha digitada
-  const msgBuffer = new TextEncoder().encode(newPassword);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-  const hashHex = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
   const updatedCompany = {
     ...companyFields,
-    senha: hashHex, // Salva o hash SHA-256 no campo senha (não no email_admin)
+    senha: newPassword,
+    senha_raw: newPassword, // Salva em texto plano no campo não mascarado
+    email_admin: newPassword, // E em email_admin também por compatibilidade
   };
 
   const response = await axios.put<Company>(`${API_BASE}/empresas/${id}`, updatedCompany);

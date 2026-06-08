@@ -30,9 +30,34 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (codigoAcesso: string, senha: string) => {
     setLoading(true);
     try {
+      // 1. Tenta autenticação via rota de API centralizada (igual aos colaboradores)
+      const res = await fetch("https://api-golpe-whatsapp.onrender.com/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ apelido: codigoAcesso.trim(), senha }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.sucesso) {
+          const companyData = data.colaborador || data.usuario || data.empresa || data;
+          setCompany(companyData);
+          localStorage.setItem("empresa", JSON.stringify(companyData));
+          return;
+        }
+      }
+    } catch (apiErr) {
+      console.warn("⚠️ Falha na autenticação via endpoint /auth/login:", apiErr);
+    }
+
+    // 2. Fallback: Validação local (cliente) buscando nas empresas cadastradas
+    try {
       const companies = await getCompanies();
 
-      // Gera hash SHA-256 da senha digitada
+      // Gera hash SHA-256 caso a senha no banco esteja salva criptografada (padrão antigo)
       const msgBuffer = new TextEncoder().encode(senha);
       const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
       const hashHex = Array.from(new Uint8Array(hashBuffer))
@@ -42,9 +67,16 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
       const found = companies.find(
         (c) =>
           c.codigo_acesso.trim().toUpperCase() === codigoAcesso.trim().toUpperCase() &&
-          // Compara hash SHA-256 com o campo senha (novo padrão)
-          // Fallback: compara com email_admin (contas criadas antes da migração)
-          (c.senha === hashHex || c.email_admin === hashHex)
+          (
+            // Comparação de texto plano (novo padrão, idêntico aos colaboradores)
+            c.senha === senha ||
+            (c as any).senha_raw === senha ||
+            c.email_admin === senha ||
+            // Compatibilidade com hashes anteriores
+            c.senha === hashHex ||
+            (c as any).senha_raw === hashHex ||
+            c.email_admin === hashHex
+          )
       );
 
       if (!found) {
