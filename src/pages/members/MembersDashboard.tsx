@@ -52,31 +52,21 @@ const MembersDashboard = () => {
 
   const { colaborador } = useColaborador();
 
-  // Lê o apelido diretamente do localStorage — cobre qualquer formato de resposta da API
-  const getApelido = (): string => {
-    try {
-      const raw = localStorage.getItem("colaborador");
-      if (raw && raw !== "null" && raw !== "undefined") {
-        const p = JSON.parse(raw);
-        // Tenta vários nomes de campo possíveis (inclusive aninhados no usuario)
-        const userObj = p?.usuario || p;
-        return (
-          userObj?.apelido ||
-          userObj?.username ||
-          userObj?.nome ||
-          userObj?.name ||
-          userObj?.email?.split("@")?.[0] ||
-          ""
-        );
-      }
-    } catch { /* ignore */ }
-    return "";
-  };
+  // Apelido: usa o colaborador do hook como fonte primária
+  const apelido =
+    colaborador?.apelido ||
+    colaborador?.nome ||
+    (colaborador as any)?.username ||
+    "Usuário";
 
-  const apelido = (colaborador as any)?.apelido || getApelido() || "Usuário";
-
-  // Recupera o ID do colaborador logado do localStorage
-  const getColaboradorId = (): number => {
+  // ID do colaborador: fonte primária é o hook, sem fallback hardcoded
+  const getColaboradorId = (): number | null => {
+    // Prioridade 1: hook useColaborador (mais confiável)
+    if (colaborador?.id) {
+      const num = Number(colaborador.id);
+      if (!isNaN(num) && num > 0) return num;
+    }
+    // Prioridade 2: localStorage como backup
     try {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
@@ -85,19 +75,27 @@ const MembersDashboard = () => {
         const id = userObj?.id ?? userObj?.colaboradorId;
         if (id !== undefined && id !== null) {
           const num = Number(id);
-          if (!isNaN(num)) return num;
+          if (!isNaN(num) && num > 0) return num;
         }
       }
     } catch {
       // ignora
     }
-    return 1; // Fallback para colaborador 1 (admin ou teste local)
+    return null; // Sem fallback — sem ID, sem dados
   };
 
   useEffect(() => {
     (async () => {
       try {
         const colaboradorId = getColaboradorId();
+
+        // Sem ID definido, não carrega dados (evita misturar dados entre contas)
+        if (colaboradorId === null) {
+          console.warn("⚠️ Colaborador não identificado — dashboard vazio.");
+          setAttempts([]);
+          setLoading(false);
+          return;
+        }
         
         // Busca treinamentos, resultados e respostas da API em paralelo
         const [apiTrainings, apiResultados, apiRespostas] = await Promise.all([
@@ -165,7 +163,7 @@ const MembersDashboard = () => {
 
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, colaborador]); // Recarrega ao trocar de conta
 
   const totalAttempts = attempts.length;
 
