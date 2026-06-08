@@ -82,8 +82,7 @@ export async function updateCompanyPassword(id: number, newPassword: string): Pr
   const updatedCompany = {
     ...companyFields,
     senha: newPassword,
-    senha_raw: newPassword, // Salva em texto plano no campo não mascarado
-    email_admin: newPassword, // E em email_admin também por compatibilidade
+    email_admin: newPassword, // Salva no email_admin (que não é mascarado no GET) para viabilizar o login
   };
 
   const response = await axios.put<Company>(`${API_BASE}/empresas/${id}`, updatedCompany);

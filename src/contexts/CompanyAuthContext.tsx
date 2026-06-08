@@ -70,11 +70,9 @@ export const CompanyAuthProvider = ({ children }: { children: ReactNode }) => {
           (
             // Comparação de texto plano (novo padrão, idêntico aos colaboradores)
             c.senha === senha ||
-            (c as any).senha_raw === senha ||
             c.email_admin === senha ||
             // Compatibilidade com hashes anteriores
             c.senha === hashHex ||
-            (c as any).senha_raw === hashHex ||
             c.email_admin === hashHex
           )
       );
