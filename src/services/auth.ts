@@ -13,6 +13,7 @@ export interface VerificarCodigoResponse {
   /** ID do colaborador — retornado pela API quando isPrimeiroAcesso é true */
   colaboradorId?: number;
   id?: number;
+  nome?: string | null;
 }
 
 export interface UsuarioLogado {

@@ -150,6 +150,8 @@ const Auth = () => {
   const [codigoEmpresa, setCodigoEmpresa] = useState("");
   const [codigoError, setCodigoError] = useState("");
   const [colaboradorId, setColaboradorId] = useState<number | null>(null);
+  const [nome, setNome] = useState("");
+  const [nomeError, setNomeError] = useState("");
   const [apelido, setApelido] = useState("");
   const [apelidoError, setApelidoError] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
@@ -163,6 +165,7 @@ const Auth = () => {
     // Reset errors on switch
     setLoginError("");
     setCodigoError("");
+    setNomeError("");
     setApelidoError("");
     setSenhaError("");
   };
@@ -245,6 +248,11 @@ const Auth = () => {
       const cId = result.colaboradorId ?? result.id ?? null;
       setColaboradorId(cId);
 
+      // Preenche o nome se já estiver cadastrado na API
+      if (result.nome) {
+        setNome(result.nome);
+      }
+
       if (result.isPrimeiroAcesso) {
         goCadastro("configurar", 1);
       } else {
@@ -269,8 +277,13 @@ const Auth = () => {
     e.preventDefault();
     setApelidoError("");
     setSenhaError("");
+    setNomeError("");
 
     let hasError = false;
+    if (!nome.trim() || nome.trim().length < 2) {
+      setNomeError("Nome deve ter ao menos 2 caracteres.");
+      hasError = true;
+    }
     if (!apelido.trim() || apelido.trim().length < 2) {
       setApelidoError("Apelido deve ter ao menos 2 caracteres.");
       hasError = true;
@@ -284,7 +297,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (colaboradorId) {
-        await updateColaborador(colaboradorId, null, novaSenha, apelido.trim());
+        await updateColaborador(colaboradorId, nome.trim(), novaSenha, apelido.trim());
       } else {
         console.warn("⚠️ colaboradorId não disponível — etapa de configuração ignorada.");
       }
@@ -632,8 +645,38 @@ const Auth = () => {
                             <div>
                               <h3 className="text-lg font-bold text-white">Criar seu perfil</h3>
                               <p className="text-sm text-zinc-500 mt-0.5">
-                                Escolha um apelido e crie sua senha de acesso.
+                                Escolha seu nome, apelido e crie sua senha de acesso.
                               </p>
+                            </div>
+
+                            {/* Nome Completo */}
+                            <div className="space-y-1.5">
+                              <Label
+                                htmlFor="cad-nome"
+                                className="text-zinc-300 font-medium text-sm"
+                              >
+                                Nome Completo
+                              </Label>
+                              <Input
+                                id="cad-nome"
+                                type="text"
+                                value={nome}
+                                onChange={(e) => {
+                                  setNome(e.target.value);
+                                  setNomeError("");
+                                }}
+                                placeholder="Digite seu nome completo"
+                                disabled={loading}
+                                autoFocus
+                                className="
+                                  h-12 rounded-2xl
+                                  border-white/10 bg-white/[0.03]
+                                  text-white placeholder:text-zinc-600
+                                  focus-visible:ring-primary
+                                  disabled:opacity-50
+                                "
+                              />
+                              <FieldError msg={nomeError} />
                             </div>
 
                             {/* Apelido */}
@@ -655,7 +698,6 @@ const Auth = () => {
                                 }}
                                 placeholder="Como quer ser chamado?"
                                 disabled={loading}
-                                autoFocus
                                 className="
                                   h-12 rounded-2xl
                                   border-white/10 bg-white/[0.03]
