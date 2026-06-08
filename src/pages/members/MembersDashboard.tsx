@@ -108,12 +108,21 @@ const MembersDashboard = () => {
           return;
         }
         
-        // Busca treinamentos, resultados e respostas da API em paralelo
-        const [apiTrainings, apiResultados, apiRespostas] = await Promise.all([
+        // Busca treinamentos e respostas (estrutura)
+        const [apiTrainings, apiRespostas] = await Promise.all([
           fetchTrainingsFromAPI(),
-          fetchResultados(),
           fetchRespostas(),
         ]);
+
+        // Busca resultados separadamente para isolar falhas
+        let apiResultados: any[] = [];
+        try {
+          apiResultados = await fetchResultados();
+          console.log("✅ /resultados carregados:", apiResultados.length, "itens");
+          console.log("📋 Primeiros resultados:", apiResultados.slice(0, 3));
+        } catch (errResultados) {
+          console.error("❌ Falha ao buscar /resultados:", errResultados);
+        }
 
         // Define os títulos de treinamentos
         const titlesMap = Object.fromEntries(
@@ -130,9 +139,14 @@ const MembersDashboard = () => {
         }
 
         // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
+        console.log("🔎 Filtrando por colaboradorId:", colaboradorId, "| total resultados:", apiResultados.length);
+        if (apiResultados.length > 0) {
+          console.log("📄 Amostra de colaboradorId nos resultados:", apiResultados.slice(0, 5).map(r => ({ id: r.id, colaboradorId: r.colaboradorId, total_acertos: r.total_acertos })));
+        }
         const myResultados = apiResultados.filter(
           (r) => Number(r.colaboradorId) === Number(colaboradorId) && r.total_acertos !== null
         );
+        console.log("✅ Resultados após filtro:", myResultados.length);
 
         // Mapeia os resultados da API para o formato Attempt esperado no dashboard
         const mappedAttempts: Attempt[] = myResultados.map((r) => {
