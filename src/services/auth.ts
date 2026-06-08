@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { findColaboradorByCodigo } from "./colaboradores";
 
 const API_BASE = "https://api-golpe-whatsapp.onrender.com";
 
@@ -39,36 +40,28 @@ export interface LoginAPIResponse {
 export async function verificarCodigoEmpresa(
   codigo: string
 ): Promise<VerificarCodigoResponse> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
-
   try {
-    const res = await fetch(`${API_BASE}/auth/verificar-codigo`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ codigo }),
-      signal: controller.signal,
-      mode: "cors",
-      credentials: "omit",
-    });
+    const colaborador = await findColaboradorByCodigo(codigo);
 
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Erro ${res.status}: ${body}`);
+    if (!colaborador) {
+      return {
+        valido: false,
+        isPrimeiroAcesso: false,
+      };
     }
 
-    const data: VerificarCodigoResponse = await res.json();
-    return data;
+    // Se o colaborador não tem apelido (nickname) configurado, é considerado primeiro acesso (primeira ativação)
+    const isPrimeiro = !colaborador.apelido || colaborador.apelido.trim() === "";
+
+    return {
+      valido: true,
+      isPrimeiroAcesso: isPrimeiro,
+      colaboradorId: colaborador.id,
+      id: colaborador.id,
+      empresaId: colaborador.empresaId || undefined,
+    };
   } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err?.name === "AbortError") {
-      throw new Error("Tempo limite esgotado. Verifique sua conexão.");
-    }
+    console.error("Erro ao verificar código localmente:", err);
     throw err;
   }
 }

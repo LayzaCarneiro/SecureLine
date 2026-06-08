@@ -211,7 +211,9 @@ export async function loginColaborador(
  * Check if colaborador already has password set
  */
 export function hasPasswordSet(colaborador: Colaborador): boolean {
-  return !!colaborador.senha;
+  // Como a API retorna senha: "****" para todos, verificamos o apelido (username)
+  // como indicador de que a conta já foi ativada.
+  return !!colaborador.apelido && colaborador.apelido.trim() !== "";
 }
 
 /**
