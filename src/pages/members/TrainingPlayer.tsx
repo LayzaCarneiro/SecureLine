@@ -22,22 +22,24 @@ const TrainingPlayer = () => {
   const [resultadoTesteId, setResultadoTesteId] = useState<number | null>(null);
 
   // Recupera o ID do colaborador logado do localStorage
-  const getColaboradorId = (): number => {
+  const getColaboradorId = (): number | null => {
     try {
       const stored = localStorage.getItem("colaborador");
       if (stored) {
         const parsed = JSON.parse(stored);
-        const userObj = parsed?.usuario || parsed;
-        const id = userObj?.id ?? userObj?.colaboradorId;
+        // Estrutura da API: {sucesso, colaborador: {id, ...}}
+        // Também tenta: {usuario: {id}}, ou objeto direto
+        const userObj = parsed?.colaborador || parsed?.usuario || parsed;
+        const id = userObj?.id ?? userObj?.colaboradorId ?? parsed?.id ?? parsed?.colaboradorId;
         if (id !== undefined && id !== null) {
           const num = Number(id);
-          if (!isNaN(num)) return num;
+          if (!isNaN(num) && num > 0) return num;
         }
       }
     } catch {
       // ignora erro de parsing
     }
-    return 1; // Fallback para colaborador 1 (admin ou teste local)
+    return null; // Sem fallback — retorna null se não encontrar
   };
 
   useEffect(() => {
