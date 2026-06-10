@@ -270,12 +270,12 @@ const CompanyDashboard = () => {
                       <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300">Anterior</Button>
                       <div className="flex items-center gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                          <Button key={page} variant={currentPage === page ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-xl p-0 ${currentPage === page ? "bg-primary text-white" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"}`}>
+                          <Button key={page} variant={currentPage === page ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-xl p-0 font-bold ${currentPage === page ? "bg-primary text-black" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"}`}>
                             {page}
                           </Button>
                         ))}
                       </div>
-                      <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300">Próxima</Button>
+                      <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300 hover:text-white">Próxima</Button>
                     </div>
                   </div>
                 )}

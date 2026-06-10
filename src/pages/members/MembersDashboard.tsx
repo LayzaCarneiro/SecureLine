@@ -604,9 +604,9 @@ const MembersDashboard = () => {
                             variant={currentPage === page ? "default" : "outline"}
                             size="sm"
                             onClick={() => setCurrentPage(page)}
-                            className={`w-9 h-9 rounded-xl p-0 ${
+                            className={`w-9 h-9 rounded-xl p-0 font-bold ${
                               currentPage === page
-                                ? "bg-primary text-white"
+                                ? "bg-primary text-black"
                                 : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"
                             }`}
                           >

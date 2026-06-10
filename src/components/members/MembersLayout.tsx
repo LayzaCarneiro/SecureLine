@@ -161,11 +161,11 @@ const MembersLayout = ({
 
           {/* USER */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right">
+            <Link to="/members" className="hidden sm:block text-right hover:opacity-85 transition-opacity">
               <p className="text-sm font-medium text-white">
                 {colaborador?.nome || colaborador?.codigo_colaborador || "Usuário"}
               </p>
-            </div>
+            </Link>
 
             <Button
               variant="ghost"

@@ -114,6 +114,9 @@ const TrainingPlayer = () => {
     const newAnswers = [...answers, { stepId: currentStep.id, optionId: selected.id, isCorrect: selected.isCorrect }];
     setAnswers(newAnswers);
 
+    // Rola para o topo de forma suave ao passar para a próxima pergunta/etapa
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     const nextId = selected.nextStepId;
     if (nextId && steps.find((s) => s.id === nextId)) {
       setCurrentStepId(nextId);
