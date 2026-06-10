@@ -95,6 +95,19 @@ const CompanyDashboard = () => {
     return codeMatch || sectorMatch;
   });
 
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  // Resetar página quando a busca mudar
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedResults = filteredResults.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="min-h-screen bg-[#060816] text-white flex flex-col relative overflow-hidden">
       {/* BACKGROUND */}
@@ -108,59 +121,28 @@ const CompanyDashboard = () => {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <Link
             to="/company/dashboard"
-            className="
-              group
-              flex items-center gap-3
-            "
+            className="group flex items-center gap-3"
           >
-            <div
-              className="
-                relative
-                w-11 h-11
-                flex items-center justify-center
-                transition-transform duration-300
-                group-hover:scale-105
-              "
-            >
-              <img
-                src="/images/logo.svg"
-                alt="SecureLine"
-                className="w-12 h-12"
-              />
+            <div className="relative w-11 h-11 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <img src="/images/logo.svg" alt="SecureLine" className="w-12 h-12" />
             </div>
 
             <div>
-              <h1 className="text-lg font-black tracking-tight text-white leading-none">
-                SecureLine
-              </h1>
-
+              <h1 className="text-lg font-black tracking-tight text-white leading-none">SecureLine</h1>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                  Corporate Area
-                </p>
-
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/20 text-primary">
-                  EMPRESA
-                </span>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">Corporate Area</p>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary/20 text-primary">EMPRESA</span>
               </div>
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-2xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-300 hover:text-white"
-            >
+            <Button asChild variant="outline" className="rounded-2xl border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-zinc-300 hover:text-white">
               <Link to="/">
                 <Home className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Voltar à Home</span>
               </Link>
             </Button>
-            <Button
-              onClick={logout}
-              variant="ghost"
-              className="flex items-center gap-2 px-4 h-10 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-red-500/10 hover:border-red-500/30 text-zinc-400 hover:text-red-400 transition-all duration-200 text-sm font-medium"
-            >
+            <Button onClick={logout} variant="ghost" className="flex items-center gap-2 px-4 h-10 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-red-500/10 hover:border-red-500/30 text-zinc-400 hover:text-red-400 transition-all duration-200 text-sm font-medium">
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
@@ -171,299 +153,132 @@ const CompanyDashboard = () => {
       {/* Main Content */}
       <main className="relative z-10 flex-1 container mx-auto px-4 py-8 space-y-8">
         {/* HERO */}
-        <section
-          className="
-            relative
-            overflow-hidden
-            rounded-[36px]
-            border border-white/10
-            bg-[#0B1023]
-            p-8 md:p-10
-          "
-        >
-          {/* BG */}
+        <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-[#0B1023] p-8 md:p-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(124,58,237,0.18),transparent_35%)]" />
           <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff_1px,transparent_1px),linear-gradient(to_bottom,#ffffff_1px,transparent_1px)] bg-[size:48px_48px]" />
 
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
             <div className="max-w-2xl">
-              <div
-                className="
-                  inline-flex
-                  items-center gap-2
-                  px-4 py-2
-                  rounded-full
-                  border border-primary/20
-                  bg-primary/10
-                  text-primary
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-[0.2em]
-                  mb-6
-                "
-              >
-                <Shield className="w-3.5 h-3.5" />
-                SecureLine Business
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-6">
+                <Building className="w-3.5 h-3.5" />
+                Área Corporativa
               </div>
 
-              <h1
-                className="
-                  text-4xl md:text-5xl
-                  font-black
-                  tracking-tight
-                  leading-[1.05]
-                  text-white
-                  mb-5
-                "
-              >
-                Olá,
-                <span
-                  className="
-                    block
-                    text-transparent
-                    bg-gradient-to-r
-                    from-primary
-                    via-violet-400
-                    to-secondary
-                    bg-clip-text
-                  "
-                >
-                  {company.nome}
-                </span>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.05] text-white">
+                Dashboard Geral
               </h1>
 
-              <p className="text-zinc-400 text-lg leading-relaxed max-w-xl">
-                Monitore o índice de vulnerabilidade de seus colaboradores, analise
-                resultados de testes e gerencie o progresso geral de conscientização de sua empresa.
+              <p className="mt-4 text-zinc-400 text-base md:text-lg leading-relaxed">
+                Bem-vindo à central de inteligência da{" "}
+                <span className="text-white font-bold">{company.nome}</span>.
+                Acompanhe o engajamento dos colaboradores, pontuações médias e
+                métricas de segurança.
               </p>
-
-              <div className="flex flex-wrap gap-3 mt-8">
-                <Button
-                  onClick={loadData}
-                  className="
-                    h-12 px-6
-                    rounded-2xl
-                    font-semibold
-                    bg-gradient-to-r
-                    from-primary
-                    to-secondary
-                    shadow-[0_10px_40px_rgba(124,58,237,0.35)]
-                    hover:opacity-90
-                  "
-                >
-                  Atualizar dados
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
             </div>
 
-            {/* SCORE CARD */}
-            <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.9,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-              className="
-                relative
-                w-full max-w-sm
-                rounded-[30px]
-                border border-white/10
-                bg-white/[0.03]
-                backdrop-blur-2xl
-                p-7
-              "
-            >
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <p className="text-sm text-zinc-500 mb-1">
-                    Média Geral de Acertos
-                  </p>
-
-                  <h3 className="text-5xl font-black text-white">
-                    {mediaScore}%
-                  </h3>
-                </div>
-
-                <div
-                  className="
-                    w-14 h-14
-                    rounded-2xl
-                    bg-primary/10
-                    border border-primary/20
-                    flex items-center justify-center
-                  "
-                >
-                  <Activity className="w-7 h-7 text-primary" />
+            <div className="flex items-center gap-6 p-6 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-xl">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                  Código de Acesso
+                </span>
+                <div className="flex items-center gap-3">
+                  <code className="text-xl font-mono font-black text-primary">
+                    {company.codigo_acesso}
+                  </code>
                 </div>
               </div>
-
-              <Progress
-                value={mediaScore}
-                className="h-3 bg-white/5"
-              />
-
-              <div className="flex items-center justify-between mt-4 text-sm">
-                <span className="text-zinc-500">
-                  Desempenho Geral
-                </span>
-
-                <span className={`font-semibold ${mediaScore >= 70 ? 'text-emerald-400' : mediaScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
-                  {mediaScore >= 70 ? 'Excelente progresso' : mediaScore >= 50 ? 'Atenção necessária' : 'Crítico'}
-                </span>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
-        {/* STATS */}
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <StatCard
-            icon={Users}
-            label="Colaboradores"
-            value={totalColaboradores.toString()}
-            glow="from-violet-500/20 to-fuchsia-500/10"
-          />
-
-          <StatCard
-            icon={FileText}
-            label="Testes Realizados"
-            value={totalTestes.toString()}
-            glow="from-cyan-500/20 to-blue-500/10"
-          />
-
-          <StatCard
-            icon={TrendingUp}
-            label="Média Geral"
-            value={`${mediaScore}%`}
-            glow="from-amber-500/20 to-orange-500/10"
-          />
-
-          <StatCard
-            icon={AlertTriangle}
-            label="Caíram no Golpe"
-            value={cairamNoGolpe.toString()}
-            glow="from-red-500/20 to-rose-500/10"
-            alertColor={cairamNoGolpe > 0 ? "text-red-400 animate-pulse" : "text-zinc-400"}
-          />
-
-          <StatCard
-            icon={CheckCircle}
-            label="Não Caíram"
-            value={naoCairamNoGolpe.toString()}
-            glow="from-emerald-500/20 to-green-500/10"
-            alertColor="text-emerald-400"
-          />
+        {/* METRICS CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard icon={Users} label="Total Colaboradores" value={totalColaboradores.toString()} glow="from-primary/20 to-purple-500/10" />
+          <StatCard icon={FileText} label="Total Simulações Concluídas" value={totalTestes.toString()} glow="from-blue-500/20 to-cyan-500/10" />
+          <StatCard icon={TrendingUp} label="Média de Acertos Geral" value={`${mediaScore}%`} glow="from-emerald-500/20 to-green-500/10" alertColor={mediaScore >= 70 ? "text-emerald-400" : mediaScore >= 50 ? "text-amber-400" : "text-red-400"} />
+          <StatCard icon={AlertTriangle} label="Caíram no Golpe (Simulado)" value={`${cairamNoGolpe}`} glow="from-red-500/20 to-orange-500/10" alertColor={cairamNoGolpe > 0 ? "text-red-400" : "text-white"} />
         </div>
 
-        {/* MONITORING / TABLE */}
-        <section
-          className="
-            relative
-            overflow-hidden
-            rounded-[32px]
-            border border-white/10
-            bg-[#0B1023]
-          "
-        >
+        {/* RESULTS TABLE */}
+        <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-[#0B1023]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(124,58,237,0.12),transparent_35%)]" />
 
           <div className="relative z-10 p-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
               <div>
-                <p className="text-primary text-sm font-semibold uppercase tracking-[0.2em] mb-3">
-                  Monitoramento
-                </p>
-
-                <h2 className="text-3xl font-black text-white">
-                  Resultados das Simulações
-                </h2>
-                
-                <p className="text-sm text-zinc-500 mt-1">
-                  Lista detalhada dos resultados das simulações por colaborador.
-                </p>
+                <p className="text-primary text-sm font-semibold uppercase tracking-[0.2em] mb-3">Relatório</p>
+                <h2 className="text-3xl font-black text-white">Resultados das Simulações</h2>
               </div>
-
-              {/* SEARCH INPUT */}
               <div className="relative w-full md:w-80">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por código ou setor..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="
-                    pl-11 h-12
-                    rounded-2xl
-                    border-white/10
-                    bg-white/[0.03]
-                    placeholder:text-zinc-600
-                    text-white
-                    focus-visible:ring-primary
-                    focus-visible:ring-offset-0
-                  "
-                />
+                <Input type="text" placeholder="Buscar por código ou setor..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-11 h-12 rounded-2xl border-white/10 bg-white/[0.03] placeholder:text-zinc-600 text-white focus-visible:ring-primary focus-visible:ring-offset-0" />
               </div>
             </div>
 
             {loading ? (
-              <div className="p-16 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
+              <div className="p-16 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
             ) : error ? (
               <div className="p-16 text-center space-y-4">
                 <p className="text-red-400">{error}</p>
-                <Button onClick={loadData} variant="outline" className="rounded-2xl border-white/10">
-                  Tentar Novamente
-                </Button>
+                <Button onClick={loadData} variant="outline" className="rounded-2xl border-white/10">Tentar Novamente</Button>
               </div>
             ) : filteredResults.length === 0 ? (
-              <div className="p-16 text-center text-zinc-500 border border-white/5 rounded-2xl bg-white/[0.01]">
-                Nenhum resultado de teste encontrado para esta empresa.
-              </div>
+              <div className="p-16 text-center text-zinc-500 border border-white/5 rounded-2xl bg-white/[0.01]">Nenhum resultado de teste encontrado para esta empresa.</div>
             ) : (
-              <div className="overflow-x-auto rounded-2xl border border-white/10">
-                <Table>
-                  <TableHeader className="bg-white/[0.02]">
-                    <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-zinc-400 font-semibold h-14 px-6">Código</TableHead>
-                      <TableHead className="text-zinc-400 font-semibold h-14 px-6">Setor</TableHead>
-                      <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-center">Acertos</TableHead>
-                      <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-center">Erros</TableHead>
-                      <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-right">Score</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredResults.map((result) => {
-                      const colaborador = result.colaborador;
-                      return (
-                        <TableRow key={result.id} className="border-white/10 hover:bg-white/[0.02] transition-colors">
-                          <TableCell className="font-mono text-zinc-300 h-14 px-6">
-                            {colaborador?.codigo_colaborador || "-"}
-                          </TableCell>
-                          <TableCell className="text-zinc-300 h-14 px-6">
-                            {colaborador?.setor || "Geral"}
-                          </TableCell>
-                          <TableCell className="text-zinc-300 h-14 px-6 text-center">
-                            {result.total_acertos !== null ? result.total_acertos : "-"}
-                          </TableCell>
-                          <TableCell className="text-zinc-300 h-14 px-6 text-center">
-                            {result.total_erros !== null ? result.total_erros : "-"}
-                          </TableCell>
-                          <TableCell className="font-semibold text-right h-14 px-6">
-                            <span className={result.score !== null && result.score >= 70 ? "text-emerald-400" : result.score !== null && result.score >= 50 ? "text-amber-400" : "text-red-400"}>
-                              {result.score !== null ? `${result.score}%` : "-"}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+              <div className="space-y-6">
+                <div className="overflow-x-auto rounded-2xl border border-white/10">
+                  <Table>
+                    <TableHeader className="bg-white/[0.02]">
+                      <TableRow className="border-white/10 hover:bg-transparent">
+                        <TableHead className="text-zinc-400 font-semibold h-14 px-6">Código</TableHead>
+                        <TableHead className="text-zinc-400 font-semibold h-14 px-6">Setor</TableHead>
+                        <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-center">Acertos</TableHead>
+                        <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-center">Erros</TableHead>
+                        <TableHead className="text-zinc-400 font-semibold h-14 px-6 text-right">Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedResults.map((result) => {
+                        const colaborador = result.colaborador;
+                        return (
+                          <TableRow key={result.id} className="border-white/10 hover:bg-white/[0.02] transition-colors">
+                            <TableCell className="font-mono text-zinc-300 h-14 px-6">{colaborador?.codigo_colaborador || "-"}</TableCell>
+                            <TableCell className="text-zinc-300 h-14 px-6">{colaborador?.setor || "Geral"}</TableCell>
+                            <TableCell className="text-zinc-300 h-14 px-6 text-center">{result.total_acertos !== null ? result.total_acertos : "-"}</TableCell>
+                            <TableCell className="text-zinc-300 h-14 px-6 text-center">{result.total_erros !== null ? result.total_erros : "-"}</TableCell>
+                            <TableCell className="font-semibold text-right h-14 px-6">
+                              <span className={result.score !== null && result.score >= 70 ? "text-emerald-400" : result.score !== null && result.score >= 50 ? "text-amber-400" : "text-red-400"}>
+                                {result.score !== null ? `${result.score}%` : "-"}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* PAGINATION CONTROLS */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                    <p className="text-sm text-zinc-500">
+                      Mostrando <span className="font-semibold text-zinc-300">{startIndex + 1}</span> a{" "}
+                      <span className="font-semibold text-zinc-300">{Math.min(startIndex + itemsPerPage, filteredResults.length)}</span>{" "}
+                      de <span className="font-semibold text-zinc-300">{filteredResults.length}</span> resultados
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300">Anterior</Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button key={page} variant={currentPage === page ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className={`w-9 h-9 rounded-xl p-0 ${currentPage === page ? "bg-primary text-white" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"}`}>
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300">Próxima</Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

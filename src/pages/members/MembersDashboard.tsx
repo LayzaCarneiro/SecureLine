@@ -183,7 +183,13 @@ const MembersDashboard = () => {
     })();
   }, [user, colaborador]); // Recarrega ao trocar de conta
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const totalAttempts = attempts.length;
+  const totalPages = Math.ceil(totalAttempts / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAttempts = attempts.slice(startIndex, startIndex + itemsPerPage);
 
   const totalCorrect = attempts.reduce((acc, curr) => acc + curr.score, 0);
   const totalQuestions = attempts.reduce((acc, curr) => acc + curr.total, 0);
@@ -490,10 +496,9 @@ const MembersDashboard = () => {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {attempts
-                  .slice(0, 10)
-                  .map((a, index) => (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  {paginatedAttempts.map((a, index) => (
                     <motion.div
                       key={a.id}
                       initial={{
@@ -570,6 +575,57 @@ const MembersDashboard = () => {
                       </div>
                     </motion.div>
                   ))}
+                </div>
+
+                {/* PAGINATION CONTROLS */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                    <p className="text-sm text-zinc-500">
+                      Mostrando <span className="font-semibold text-zinc-300">{startIndex + 1}</span> a{" "}
+                      <span className="font-semibold text-zinc-300">
+                        {Math.min(startIndex + itemsPerPage, totalAttempts)}
+                      </span>{" "}
+                      de <span className="font-semibold text-zinc-300">{totalAttempts}</span> tentativas
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"
+                      >
+                        Anterior
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(page)}
+                            className={`w-9 h-9 rounded-xl p-0 ${
+                              currentPage === page
+                                ? "bg-primary text-white"
+                                : "border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"
+                            }`}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        className="rounded-xl border-white/10 bg-white/[0.02] hover:bg-white/[0.06] text-zinc-300"
+                      >
+                        Próxima
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
