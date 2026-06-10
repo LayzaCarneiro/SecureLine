@@ -71,15 +71,24 @@ const CompanyDashboard = () => {
   const totalColaboradores = company.colaboradores.length;
   const totalTestes = results.length;
 
-  // Média Geral de Score (ignora nulls)
-  const validScores = results.filter((r) => r.score !== null) as { score: number }[];
-  const mediaScore =
-    validScores.length > 0
-      ? Math.round(validScores.reduce((acc, curr) => acc + curr.score, 0) / validScores.length)
-      : 0;
+  // Média Geral de Acertos (total acertos / total respondido)
+  const validResults = results.filter((r) => r.total_acertos !== null && r.total_erros !== null);
+  const totalAcertos = validResults.reduce((acc, curr) => acc + (curr.total_acertos || 0), 0);
+  const totalErros = validResults.reduce((acc, curr) => acc + (curr.total_erros || 0), 0);
+  const totalQuestoes = totalAcertos + totalErros;
+  const mediaScore = totalQuestoes > 0 ? Math.round((totalAcertos / totalQuestoes) * 100) : 0;
 
-  const cairamNoGolpe = company.colaboradores.filter((c) => c.triked).length;
-  const naoCairamNoGolpe = company.colaboradores.filter((c) => !c.triked).length;
+  // Obter os IDs de colaboradores que tiveram pelo menos um erro nos testes respondidos
+  const colaboradoresTrikedIds = new Set(
+    results
+      .filter((r) => r.total_erros !== null && r.total_erros > 0)
+      .map((r) => r.colaboradorId)
+  );
+
+  const cairamNoGolpe = company.colaboradores.filter(
+    (c) => c.triked || colaboradoresTrikedIds.has(c.id)
+  ).length;
+  const naoCairamNoGolpe = totalColaboradores - cairamNoGolpe;
 
   // Filtrar resultados exibidos na tabela por busca
   const filteredResults = results.filter((r) => {

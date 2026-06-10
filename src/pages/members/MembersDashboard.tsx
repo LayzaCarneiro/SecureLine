@@ -192,13 +192,9 @@ const MembersDashboard = () => {
 
   const totalAttempts = attempts.length;
 
-  const avgScore = totalAttempts
-    ? attempts.reduce(
-        (s, a) =>
-          s + Number(a.percentage),
-        0
-      ) / totalAttempts
-    : 0;
+  const totalCorrect = attempts.reduce((acc, curr) => acc + curr.score, 0);
+  const totalQuestions = attempts.reduce((acc, curr) => acc + curr.total, 0);
+  const avgScore = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
   const bestScore = totalAttempts
     ? Math.max(

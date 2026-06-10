@@ -94,8 +94,11 @@ const ResultsSection = ({
     })();
   }, []);
 
-  const avgOverallScore = allResults.length
-    ? Math.round(allResults.reduce((sum, r) => sum + Number(r.score || 0), 0) / allResults.length)
+  const totalCommunityCorrect = allResults.reduce((sum, r) => sum + Number(r.total_acertos || 0), 0);
+  const totalCommunityErrors = allResults.reduce((sum, r) => sum + Number(r.total_erros || 0), 0);
+  const totalCommunityQuestions = totalCommunityCorrect + totalCommunityErrors;
+  const avgOverallScore = totalCommunityQuestions > 0
+    ? Math.round((totalCommunityCorrect / totalCommunityQuestions) * 100)
     : 0;
 
   const faixas = ["Até 20 anos", "21 a 30 anos", "31 a 45 anos", "46 a 60 anos", "Mais de 60 anos"];
@@ -103,7 +106,10 @@ const ResultsSection = ({
     const list = allResults.filter((r) => r.faixa_etaria === f);
     const count = list.length;
     const pctShare = allResults.length ? Math.round((count / allResults.length) * 100) : 0;
-    const avgScore = count ? Math.round(list.reduce((sum, r) => sum + Number(r.score || 0), 0) / count) : 0;
+    const correctCount = list.reduce((sum, r) => sum + Number(r.total_acertos || 0), 0);
+    const errorCount = list.reduce((sum, r) => sum + Number(r.total_erros || 0), 0);
+    const totalCount = correctCount + errorCount;
+    const avgScore = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
     return { name: f, count, pct: pctShare, avgScore };
   });
 
@@ -112,7 +118,10 @@ const ResultsSection = ({
     const list = allResults.filter((r) => r.conhecimento_ti === e);
     const count = list.length;
     const pctShare = allResults.length ? Math.round((count / allResults.length) * 100) : 0;
-    const avgScore = count ? Math.round(list.reduce((sum, r) => sum + Number(r.score || 0), 0) / count) : 0;
+    const correctCount = list.reduce((sum, r) => sum + Number(r.total_acertos || 0), 0);
+    const errorCount = list.reduce((sum, r) => sum + Number(r.total_erros || 0), 0);
+    const totalCount = correctCount + errorCount;
+    const avgScore = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
     return { name: e, count, pct: pctShare, avgScore };
   });
 
