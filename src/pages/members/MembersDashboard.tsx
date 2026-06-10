@@ -138,15 +138,10 @@ const MembersDashboard = () => {
           }
         }
 
-        // Filtra resultados do colaborador atual que já foram finalizados (total_acertos não nulo)
-        console.log("🔎 Filtrando por colaboradorId:", colaboradorId, "| total resultados:", apiResultados.length);
-        if (apiResultados.length > 0) {
-          console.log("📄 Amostra de colaboradorId nos resultados:", apiResultados.slice(0, 5).map(r => ({ id: r.id, colaboradorId: r.colaboradorId, total_acertos: r.total_acertos })));
-        }
+        // Filtra resultados do colaborador atual que já foram finalizados (score não nulo)
         const myResultados = apiResultados.filter(
-          (r) => Number(r.colaboradorId) === Number(colaboradorId) && r.total_acertos !== null
+          (r) => Number(r.colaboradorId) === Number(colaboradorId) && r.score !== null
         );
-        console.log("✅ Resultados após filtro:", myResultados.length);
 
         // Mapeia os resultados da API para o formato Attempt esperado no dashboard
         const mappedAttempts: Attempt[] = myResultados.map((r) => {
@@ -154,17 +149,15 @@ const MembersDashboard = () => {
           let trainingId = localStorage.getItem(`training_id_for_result_${r.id}`) || "";
           
           if (!trainingId) {
-            const rAnswers = apiRespostas.filter((ans) => ans.resultadoTesteId === r.id);
+            // Compara como número para evitar mismatch de tipos (string vs number)
+            const rAnswers = apiRespostas.filter((ans) => Number(ans.resultadoTesteId) === Number(r.id));
             if (rAnswers.length > 0) {
               const firstCenarioId = Number(rAnswers[0].cenarioGolpeId);
               trainingId = scenarioToTrainingIdMap.get(firstCenarioId) || "";
             }
           }
 
-          // Se mesmo assim não achar, usa o primeiro treinamento como fallback
-          if (!trainingId && apiTrainings.length > 0) {
-            trainingId = apiTrainings[0].id;
-          }
+          // Sem fallback para primeiro treinamento — label genérico é melhor que nome errado
 
           return {
             id: String(r.id),
@@ -172,13 +165,13 @@ const MembersDashboard = () => {
             score: r.total_acertos || 0,
             total: (r.total_acertos || 0) + (r.total_erros || 0),
             percentage: r.score || 0,
-            completed_at: r.created_at || new Date().toISOString(),
+            completed_at: r.created_at || "",
           };
         });
 
-        // Ordena por data (mais recentes primeiro)
+        // Ordena por ID decrescente (mais recentes primeiro) — created_at não é preenchido pela API
         mappedAttempts.sort(
-          (a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()
+          (a, b) => Number(b.id) - Number(a.id)
         );
 
         setAttempts(mappedAttempts);
@@ -542,11 +535,9 @@ const MembersDashboard = () => {
                           </div>
 
                           <p className="text-sm text-zinc-500">
-                            {new Date(
-                              a.completed_at
-                            ).toLocaleString(
-                              "pt-BR"
-                            )}
+                            {a.completed_at
+                              ? new Date(a.completed_at).toLocaleString("pt-BR")
+                              : "Concluído (Data não registrada)"}
                           </p>
                         </div>
 
