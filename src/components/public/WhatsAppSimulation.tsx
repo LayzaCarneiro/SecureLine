@@ -519,29 +519,6 @@ const WhatsAppSimulation = ({
                     online
                   </p>
                 </div>
-
-                <div className="ml-auto">
-                  <div
-                    className="
-                      px-3 py-1
-                      rounded-full
-                      border border-red-500/20
-                      bg-red-500/10
-                    "
-                  >
-                    <span
-                      className="
-                        text-[11px]
-                        font-semibold
-                        tracking-wide
-                        text-red-300
-                        uppercase
-                      "
-                    >
-                      {scenario.scamType}
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* Chat */}
